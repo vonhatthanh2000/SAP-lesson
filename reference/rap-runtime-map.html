@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reference — RAP Runtime Map</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Quick reference · Print-friendly</div>
+    <h1>RAP runtime map</h1>
+    <p class="lede">Use this sheet to locate a concern before reaching for syntax.</p>
+  </header>
+
+  <section>
+    <h2>Request path</h2>
+    <div class="flow">
+      <span>Client</span><i>→</i><span>Service binding</span><i>→</i><span>Service definition</span><i>→</i><span>Projection</span><i>→</i><span>BO behavior</span><i>→</i><span>Buffer + save</span><i>→</i><span>Persistence</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Put the concern in the right place</h2>
+    <table>
+      <thead><tr><th>Concern</th><th>Primary RAP mechanism</th><th>Question it answers</th></tr></thead>
+      <tbody>
+        <tr><td>Shape, relationships, semantics</td><td>CDS entity/association/composition</td><td>What is the domain model?</td></tr>
+        <tr><td>Allowed operations</td><td>Behavior definition</td><td>What may a consumer request?</td></tr>
+        <tr><td>Derived data</td><td>Determination</td><td>What must be recalculated?</td></tr>
+        <tr><td>Invariant</td><td>Validation</td><td>What state must not be accepted?</td></tr>
+        <tr><td>Named intent/state transition</td><td>Action</td><td>What business command is being requested?</td></tr>
+        <tr><td>User permission</td><td>Authorization/DCL</td><td>May this user read or change it?</td></tr>
+        <tr><td>State-dependent availability</td><td>Feature control</td><td>Is this operation possible now?</td></tr>
+        <tr><td>UI refresh dependency</td><td>Side effect</td><td>What should the client reread?</td></tr>
+        <tr><td>Consumer-specific contract</td><td>Projection</td><td>What does this use case expose?</td></tr>
+        <tr><td>Exposure model</td><td>Service definition</td><td>Which entities form the service?</td></tr>
+        <tr><td>Protocol/category</td><td>Service binding</td><td>How is the service consumed?</td></tr>
+        <tr><td>Local typed consumption</td><td>EML</td><td>How does ABAP invoke the BO?</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Managed or unmanaged?</h2>
+    <div class="grid">
+      <article class="card"><h3>Managed</h3><p>Prefer for a new BO whose CRUD and persistence fit RAP conventions. RAP supplies standard transactional buffering and save behavior; implement domain-specific breakouts.</p></article>
+      <article class="card"><h3>Unmanaged</h3><p>Use when an existing transactional implementation or persistence mechanism must remain authoritative. You assume more of the RAP provider contract.</p></article>
+      <article class="card"><h3>Hybrid breakouts</h3><p>Use unmanaged/additional save when managed interaction semantics fit but persistence or follow-up processing requires a controlled seam.</p></article>
+    </div>
+    <p>Primary source: <a href="https://help.sap.com/docs/abap-cloud/abap-rap/business-object-implementation-types">SAP Help — Business Object Implementation Types</a>.</p>
+  </section>
+
+  <section>
+    <h2>Three distinctions interviewers probe</h2>
+    <ul>
+      <li><strong>Authorization ≠ feature control:</strong> user permission versus current instance capability.</li>
+      <li><strong>Business behavior ≠ service exposure:</strong> the BO owns rules; service artifacts expose it.</li>
+      <li><strong>Transactional buffer ≠ database:</strong> requested changes are not durable until the save contract succeeds.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Companion lesson: <a href="../lessons/0001-trace-a-rap-request.html">Trace a RAP request</a>. Sources: <a href="https://help.sap.com/docs/abap-cloud/abap-rap/abap-restful-application-programming-model">RAP overview</a> · <a href="https://help.sap.com/docs/abap-cloud/abap-rap/rap-business-object-contract">BO contract</a> · <a href="https://help.sap.com/docs/ABAP_Cloud/abap-rap/entity-manipulation-language-eml?locale=en-US">EML</a>.</p>
+  </footer>
+</main>
+</body>
+</html>

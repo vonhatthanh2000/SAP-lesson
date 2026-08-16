@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 1 — Trace a RAP Request</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">Lesson 1 · 20 minutes · Architecture</div>
+    <h1>Trace a RAP request</h1>
+    <p class="lede">Your first interview-level skill is not writing RAP syntax. It is predicting which artifact receives a request, which contract governs it, and when data becomes durable.</p>
+  </header>
+
+  <section>
+    <h2>The tangible win</h2>
+    <div class="callout success">
+      <p>By the end, you can trace one <strong>Release Order</strong> action from a Fiori elements screen to persistence and back—and explain why each layer exists.</p>
+    </div>
+    <p>This directly supports the mission in <a href="../MISSION.md">MISSION.md</a> and is the first gate in the <a href="../ROADMAP.md">one-month roadmap</a>.</p>
+  </section>
+
+  <section>
+    <h2>Build the model from the database outward</h2>
+    <div class="grid">
+      <article class="card">
+        <h3>1. Data model</h3>
+        <p>CDS entities give data business meaning and define the business-object topology. A root plus composed items creates the aggregate you change consistently.</p>
+      </article>
+      <article class="card">
+        <h3>2. Behavior contract</h3>
+        <p>The behavior definition declares what consumers may do: create, update, delete, actions, draft, locks, authorization, validations, and determinations.</p>
+      </article>
+      <article class="card">
+        <h3>3. Consumer projection</h3>
+        <p>A projection exposes the subset and behavior appropriate to a use case. It prevents the reusable domain model from becoming the UI's accidental public contract.</p>
+      </article>
+      <article class="card">
+        <h3>4. Service exposure</h3>
+        <p>A service definition selects exposed entities. A service binding attaches a protocol and service category, such as an OData V4 UI service.</p>
+      </article>
+      <article class="card">
+        <h3>5. Client</h3>
+        <p>Fiori elements interprets service metadata and annotations. It is a consumer of the business object; it is not the owner of business invariants.</p>
+      </article>
+    </div>
+    <p>The official anchors are SAP's <a href="https://help.sap.com/docs/abap-cloud/abap-rap/abap-restful-application-programming-model">RAP overview</a>, <a href="https://help.sap.com/docs/abap-cloud/abap-rap/rap-business-object-contract">business-object contract</a>, <a href="https://help.sap.com/docs/abap-cloud/abap-rap/service-definition">service definition</a>, and <a href="https://help.sap.com/docs/abap-cloud/abap-rap/service-binding?locale=en-US">service binding</a>.</p>
+  </section>
+
+  <section>
+    <h2>Trace “Release Order”</h2>
+    <div class="flow" aria-label="RAP action request flow">
+      <span>Fiori elements</span><i>→</i>
+      <span>OData V4 binding</span><i>→</i>
+      <span>projection contract</span><i>→</i>
+      <span>BO action</span><i>→</i>
+      <span>transactional buffer</span><i>→</i>
+      <span>save sequence</span><i>→</i>
+      <span>persistence</span>
+    </div>
+    <ol>
+      <li>The client invokes the projected <code>Release</code> action through OData.</li>
+      <li>The RAP runtime resolves the business-object instance and enforces the declared behavior contract.</li>
+      <li>Authorization and feature control answer different questions: “may this user do it?” and “is it currently possible for this instance?”</li>
+      <li>The action implementation requests the status transition in the transactional buffer. Related validations, determinations, and messages participate according to their declared triggers.</li>
+      <li>The save sequence makes accepted changes durable; failures and messages return through the service to the client.</li>
+    </ol>
+    <p>RAP's transaction is more than table CRUD: changes pass through a defined interaction and save contract. EML exposes the same BO operations locally from ABAP without routing through HTTP; see SAP's <a href="https://help.sap.com/docs/ABAP_Cloud/abap-rap/entity-manipulation-language-eml?locale=en-US">EML documentation</a>.</p>
+  </section>
+
+  <section>
+    <h2>Your familiar-system translation</h2>
+    <table>
+      <thead><tr><th>Familiar idea</th><th>Useful RAP analogy</th><th>Where the analogy breaks</th></tr></thead>
+      <tbody>
+        <tr><td>Database schema/view</td><td>CDS data model</td><td>CDS also carries semantics, associations, annotations, and BO structure.</td></tr>
+        <tr><td>Domain aggregate</td><td>RAP root with composed children</td><td>RAP adds a declared transactional contract and runtime lifecycle.</td></tr>
+        <tr><td>Application service API</td><td>Behavior definition plus EML</td><td>Operations are declared on entities and integrated with RAP transaction semantics.</td></tr>
+        <tr><td>REST controller/router</td><td>Service definition and binding</td><td>These expose the model; business rules should remain in the BO.</td></tr>
+        <tr><td>Generated admin UI</td><td>Fiori elements</td><td>Annotations and OData metadata describe more business semantics than basic scaffolding.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Placement drill</h2>
+    <p>Answer aloud before opening each explanation.</p>
+    <details>
+      <summary>An item amount must change whenever quantity or unit price changes. Where does the rule belong?</summary>
+      <p>A <strong>determination</strong> owns the derived value. It must be safe when triggered repeatedly; the UI may additionally need a side effect so it knows which values to reread. SAP notes that determination execution order is not fixed and determinations must be idempotent: <a href="https://help.sap.com/docs/abap-cloud/abap-rap/determinations">Determinations</a>.</p>
+    </details>
+    <details>
+      <summary>An order with no items must not activate. Where does the rule belong?</summary>
+      <p>A <strong>validation</strong> protects the invariant and reports a failure/message. Hiding an Activate button would not protect EML or other non-UI consumers.</p>
+    </details>
+    <details>
+      <summary>Only an approver may release an order, and only while its status is Approved. Is one mechanism enough?</summary>
+      <p>No. <strong>Authorization</strong> handles the user-dependent permission; <strong>instance feature control</strong> handles the state-dependent availability. SAP explicitly separates these concerns: <a href="https://help.sap.com/docs/abap-cloud/abap-rap/authorization-control">Authorization Control</a>.</p>
+    </details>
+    <details>
+      <summary>Should the OData service implementation calculate the total?</summary>
+      <p>No. Put the invariant in the BO so OData clients, EML consumers, tests, and future service bindings observe the same behavior.</p>
+    </details>
+  </section>
+
+  <section>
+    <h2>Retrieval check</h2>
+    <p>Close the lesson and draw the request flow from memory. Then answer:</p>
+    <ul class="checklist">
+      <li>Which artifact declares that <code>Release</code> exists?</li>
+      <li>Which artifact chooses what a particular consumer may see?</li>
+      <li>Which two artifacts expose that consumer contract over OData?</li>
+      <li>Where does a change live before the save sequence succeeds?</li>
+      <li>Why must the release invariant not live only in the UI?</li>
+    </ul>
+    <p><strong>Pass condition:</strong> explain all five without looking, then use the <a href="../reference/rap-runtime-map.html">RAP runtime map</a> to correct your diagram.</p>
+  </section>
+
+  <section>
+    <h2>Primary reading</h2>
+    <p>Read SAP Learning's <a href="https://learning.sap.com/courses/building-transactional-apps-with-the-abap-restful-application-programming-model/exploring-the-concept-and-architecture-of-rap">Exploring the Concept and Architecture of RAP</a>. While reading, annotate your diagram only when the source changes your prediction of runtime behavior.</p>
+  </section>
+
+  <footer>
+    <p>Ask your teaching agent about anything unclear—especially where the database, blockchain, or REST analogy stops being accurate. Next lesson: model the Sales Order Request aggregate and defend its composition boundary.</p>
+  </footer>
+</main>
+</body>
+</html>
