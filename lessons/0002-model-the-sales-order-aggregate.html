@@ -178,6 +178,28 @@
       </section>
 
       <section>
+        <h2>Dissect the OpenSAP aggregate first</h2>
+        <p>In the sample, <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U3_DDLS_ZI_RAP_TRAVEL.txt#L1-L40">Travel is the root</a>. It owns a composition of Bookings but only associates to Agency, Customer, and Currency. The <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U3_DDLS_ZI_RAP_BOOKING.txt#L1-L43">Booking child</a> points to its parent and independently references Customer, Carrier, Connection, Flight, and Currency.</p>
+        <p>The lifecycle decision becomes visible in behavior: Travel permits <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U2_BDEF_ZRAP_I_TRAVEL_.txt#L1-L49">create-by-association for Booking, while Booking's lock depends on Travel</a>. The projected model preserves the navigation by <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U4_DDLS_ZC_RAP_TRAVEL.txt#L35-L40">redirecting the composition to the projected child</a>.</p>
+        <table>
+          <thead><tr><th>OpenSAP observation</th><th>Your Sales Order decision</th></tr></thead>
+          <tbody>
+            <tr><td>Booking cannot participate in this Travel BO without a Travel parent.</td><td>Item belongs to exactly one SalesOrderRequest.</td></tr>
+            <tr><td>Customer exists independently and is associated.</td><td>Sold-to party is referenced; the request does not own customer master data.</td></tr>
+            <tr><td>Travel owns TotalPrice derived from Booking prices.</td><td>SalesOrderRequest owns OrderTotal derived from its Items.</td></tr>
+            <tr><td>Child locking/authorization can depend on the root.</td><td>Item changes participate in the request's concurrency and permission model.</td></tr>
+          </tbody>
+        </table>
+        <p>Use the full <a href="../reference/opensap-travel-sample.html">OpenSAP sample analysis</a> to complete a two-column note: “what the sample does” versus “what I will change for Sales Order.”</p>
+        <p>Answer from the sample before designing your model:</p>
+        <ol>
+          <li>Which two CDS declarations establish the Travel–Booking parent/child topology?</li>
+          <li>Why is Customer an association even though a Travel may require a customer to be valid?</li>
+          <li>Which BDEF statements turn lifecycle ownership into allowed operations and dependent policies?</li>
+        </ol>
+      </section>
+
+      <section>
         <h2>Boundary drill</h2>
         <p>Decide before opening the explanation.</p>
         <details>

@@ -9,7 +9,7 @@
   <body>
     <main>
       <header>
-        <div class="eyebrow">Lesson 1 · 20 minutes · Architecture</div>
+        <div class="eyebrow">Lesson 1 · 35 minutes · Architecture + sample trace</div>
         <h1>Trace a RAP request</h1>
         <p class="lede">
           Your first interview-level skill is not writing RAP syntax. It is
@@ -97,6 +97,26 @@
             >service binding</a
           >.
         </p>
+      </section>
+
+      <section>
+        <h2>Concrete trace: OpenSAP Travel</h2>
+        <div class="callout">
+          <p>SAP marks this 2020 repository as not up to date, so use it to see relationships—not as the current implementation template. In particular, its service-binding exercise uses OData V2; your portfolio will use OData V4 where supported.</p>
+        </div>
+        <p>First follow the read path:</p>
+        <div class="flow">
+          <span>Fiori preview</span><i>→</i><span>binding</span><i>→</i><span>service definition</span><i>→</i><span>projection CDS</span><i>→</i><span>interface CDS</span><i>→</i><span>tables</span>
+        </div>
+        <p>Then follow <code>acceptTravel</code>: the <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U5_DDLX_ZC_RAP_TRAVEL.txt#L52-L68">UI annotation names the action</a>, the <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U5_BDEF_ZC_RAP_TRAVEL.txt#L1-L23">behavior projection exposes it</a>, the <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U5_BDEF_ZI_RAP_TRAVEL.txt#L1-L30">base BDEF declares it</a>, and the <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U6_CLAS_ZBP_I_RAP_TRAVEL.txt#L259-L280">handler changes buffered state through local EML</a>.</p>
+        <p>Open the complete <a href="../reference/opensap-travel-sample.html">OpenSAP Travel analysis</a> and explain what each boundary contributes before mapping <code>acceptTravel</code> to Sales Order <code>Release</code>.</p>
+        <ol>
+          <li>Label the UI annotation as <em>presentation</em>.</li>
+          <li>Label the behavior projection as <em>consumer contract</em>.</li>
+          <li>Label the base BDEF as <em>BO contract</em>.</li>
+          <li>Label the handler as <em>implementation</em>.</li>
+          <li>Label <code>COMMIT ENTITIES</code> as the <em>save boundary</em>, then redraw the same trace for <code>Release</code>.</li>
+        </ol>
       </section>
 
       <section>

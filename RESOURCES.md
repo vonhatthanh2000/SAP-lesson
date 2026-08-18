@@ -28,6 +28,8 @@
   Managed greenfield workshop covering draft, numbering, determinations, validations, actions, feature control, EML, and ABAP Unit. Use for: Weeks 1–2 practice.
 - [SAP-samples: RAP110](https://github.com/SAP-samples/abap-platform-rap110)
   Intermediate two-node workshop with late numbering, side effects, functions, events, and additional save. Use for: selected Week 3 exercises.
+- [SAP-samples: OpenSAP RAP sample](https://github.com/SAP-samples/abap-platform-rap-opensap)
+  Historical Travel/Booking course sample organized from read-only modeling through transactional behavior, unmanaged code, and service consumption. Use for: concrete artifact tracing only; SAP explicitly marks the exercises as no longer up to date, so validate implementation choices against current SAP Help and RAP100/RAP110.
 - [SAP-samples: RAP400](https://github.com/SAP-samples/abap-platform-rap-workshops/tree/main/rap4xx/rap400)
   SAP's dedicated RAP testing workshop. Use for: EML scenario tests and test isolation.
 - [SAP-samples: ABAP Flight Reference Scenario](https://github.com/SAP-samples/abap-platform-refscen-flight)

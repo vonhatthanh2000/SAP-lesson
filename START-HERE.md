@@ -20,6 +20,7 @@ Current lesson: [Lesson 2 — Model the Sales Order Aggregate](./lessons/0002-mo
 - [Resources](./RESOURCES.md) — curated SAP documentation and first-party samples.
 - [RAP runtime map](./reference/rap-runtime-map.html) — printable architecture and responsibility reference.
 - [Lesson 1 code trail](./reference/lesson-1-code-trail.html) — exact first-party SAP sample files for every Lesson 1 notion.
+- [OpenSAP Travel sample analysis](./reference/opensap-travel-sample.html) — concrete end-to-end code trace and Sales Order transfer map, with historical-version warnings.
 - [Glossary](./GLOSSARY.md) — terminology demonstrated and established during retrieval checks.
 - [Primary-source research](./research/sap-rap-primary-sources.md) — detailed evidence, environment boundaries, and source map.
 

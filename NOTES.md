@@ -8,3 +8,4 @@
 - Use an SAP SD-style process as a coherent example throughout the month.
 - Every portfolio artifact should produce evidence useful in an interview: code, tests, diagrams, decisions, demos, or concise explanations.
 - Videos should show reasoning and debugging, not only a successful happy-path demo.
+- Before applying a concept to the Sales Order portfolio, analyze the corresponding first-party SAP sample end to end: identify each artifact's responsibility, trace runtime behavior, note outdated or tutorial-only shortcuts, then write an explicit transfer decision.

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reference — OpenSAP Travel Sample Analysis</title>
+  <link rel="stylesheet" href="../assets/course.css">
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">First-party sample analysis · Verified 2026-08-18</div>
+    <h1>OpenSAP Travel under the microscope</h1>
+    <p class="lede">Follow one concrete RAP application from persistence to Fiori, then transfer its structure—not its obsolete details—to the Sales Order portfolio.</p>
+  </header>
+
+  <section>
+    <h2>Use this repository carefully</h2>
+    <div class="callout">
+      <p>SAP's own <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/README.md#L1-L25">repository warning</a> says the associated 2020 course is no longer available and the exercises are not up to date. Use it to understand artifact relationships and runtime flow. Use current SAP Help, RAP100, and RAP110 as the implementation baseline.</p>
+    </div>
+    <p>Concrete outdated detail: the sample creates an OData V2 UI binding because V4 was not yet available in that exercise. For the new portfolio, use OData V4 where supported; the historical note appears in <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/unit6.md#L81-L107">Week 2 Unit 6</a>.</p>
+  </section>
+
+  <section>
+    <h2>The domain</h2>
+    <div class="grid">
+      <article class="card"><h3>Travel root</h3><p>Owns trip dates, agency/customer references, currency, booking fee, total price, status, and audit information.</p></article>
+      <article class="card"><h3>Booking child</h3><p>Belongs to one Travel and holds flight selection, customer, price, currency, and child identity.</p></article>
+      <article class="card"><h3>Independent references</h3><p>Agency, Customer, Carrier, Connection, Flight, and Currency exist outside the Travel lifecycle.</p></article>
+    </div>
+    <p>The root declares <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U3_DDLS_ZI_RAP_TRAVEL.txt#L1-L40">Booking as a composition while Agency, Customer, and Currency are associations</a>. The child declares its <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U3_DDLS_ZI_RAP_BOOKING.txt#L1-L43">association to parent plus independent references</a>.</p>
+  </section>
+
+  <section>
+    <h2>Trace A — Read from Fiori to persistence</h2>
+    <div class="flow">
+      <span>Fiori elements</span><i>→</i><span>service binding</span><i>→</i><span>service definition</span><i>→</i><span>projection CDS</span><i>→</i><span>interface CDS</span><i>→</i><span>tables</span>
+    </div>
+    <table>
+      <thead><tr><th>Step</th><th>Sample object</th><th>What it contributes</th></tr></thead>
+      <tbody>
+        <tr><td>1. Persistence</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U2_TABL_ZRAP_ATRAV.txt#L1-L27">Travel table</a> · <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U2_TABL_ZRAP_ABOOK.txt#L1-L23">Booking table</a></td><td>Durable state and technical keys. A separate child table does not make Booking a root.</td></tr>
+        <tr><td>2. BO data model</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U3_DDLS_ZI_RAP_TRAVEL.txt#L1-L40">Travel interface CDS</a> · <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U3_DDLS_ZI_RAP_BOOKING.txt#L1-L43">Booking interface CDS</a></td><td>Root/child topology, semantic fields, composition, associations, and amount/currency relationships.</td></tr>
+        <tr><td>3. Consumer shape</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U4_DDLS_ZC_RAP_TRAVEL.txt#L1-L40">Travel projection</a> · <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U4_DDLS_ZC_RAP_BOOKING.txt#L1-L43">Booking projection</a></td><td>Selects the UI-facing shape, adds value-help/text semantics, and redirects the projected parent/child relationship.</td></tr>
+        <tr><td>4. UI metadata</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U5_DDLX_ZC_RAP_TRAVEL.txt#L1-L68">Travel metadata extension</a></td><td>Creates list/object-page fields and a Booking facet. It changes presentation, not domain rules.</td></tr>
+        <tr><td>5. Service scope</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U6_SRVD_ZUI_RAP_TRAVEL.txt#L1-L13">Service definition</a></td><td>Exposes Travel, Booking, and value-help entities under service aliases.</td></tr>
+        <tr><td>6. Protocol and preview</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/unit6.md#L81-L145">Service-binding and Fiori-preview steps</a></td><td>Historically binds the service to OData V2 and launches a metadata-driven client. Use OData V4 for the new project.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Trace B — Invoke Accept Travel</h2>
+    <div class="flow">
+      <span>Accept button</span><i>→</i><span>projected action</span><i>→</i><span>base action contract</span><i>→</i><span>handler</span><i>→</i><span>transactional buffer</span><i>→</i><span>save</span>
+    </div>
+    <ol>
+      <li>The metadata extension places the <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U5_DDLX_ZC_RAP_TRAVEL.txt#L52-L68"><code>acceptTravel</code> action on the UI</a>.</li>
+      <li>The behavior projection explicitly <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U5_BDEF_ZC_RAP_TRAVEL.txt#L1-L23">exposes the base action</a>.</li>
+      <li>The base behavior definition <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U5_BDEF_ZI_RAP_TRAVEL.txt#L1-L30">declares the managed BO, action, determinations, and validations</a>.</li>
+      <li>The handler <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U6_CLAS_ZBP_I_RAP_TRAVEL.txt#L259-L280">updates TravelStatus using EML in local mode</a>, then reads the buffer to build the action result.</li>
+      <li>Managed RAP owns standard persistence. The separate <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U4_CLAS_ZCL_RAP_EML.txt#L63-L105">external EML example</a> makes the interaction/save boundary visible by separating <code>MODIFY ENTITIES</code> and <code>COMMIT ENTITIES</code>.</li>
+    </ol>
+    <div class="callout">
+      <p>The sample action sets Accepted status but is not a production-grade release policy. For Sales Order <code>Release</code>, enforce allowed pre-state and authorization in the backend; feature control only guides the client.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>See rules as separate mechanisms</h2>
+    <table>
+      <thead><tr><th>Mechanism</th><th>OpenSAP example</th><th>Sales Order transfer</th></tr></thead>
+      <tbody>
+        <tr><td>Determination</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U6_CLAS_ZBP_I_RAP_TRAVEL.txt#L466-L525">Recalculate TotalPrice from BookingFee and Bookings</a></td><td>Recalculate Item NetAmount and aggregate OrderTotal.</td></tr>
+        <tr><td>Validation</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U6_CLAS_ZBP_I_RAP_TRAVEL.txt#L219-L256">Reject invalid date intervals with failed/reported messages</a></td><td>Reject invalid requested dates or submission without valid items.</td></tr>
+        <tr><td>Feature control</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U6_CLAS_ZBP_I_RAP_TRAVEL.txt#L307-L329">Enable/disable Accept and Reject from status</a></td><td>Expose Release only when state makes it meaningful.</td></tr>
+        <tr><td>Authorization</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U6_CLAS_ZBP_I_RAP_TRAVEL.txt#L332-L463">Authorization-object checks and returned permissions</a></td><td>Check whether the user may release. Warning: the sample later forces results to allowed for exercise testing; remove that pattern from real code.</td></tr>
+        <tr><td>Draft</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week3/sources/W3U7_BDEF_ZI_RAP_TRAVEL.txt#L1-L38">Draft tables, total ETag, draft-enabled composition, and Prepare validations</a></td><td>Support interrupted order editing while preserving active state until activation.</td></tr>
+        <tr><td>CDS read access</td><td><a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/71f57c5a1fc1cf902bd38afb1259f79610732ce6/week2/sources/W2U7_DCLS_ZI_RAP_TRAVEL.txt#L1-L14">DCL filters by authorization and currency</a></td><td>Restrict visible requests by appropriate organizational authorization—not by copying this toy condition.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Transfer, do not translate literally</h2>
+    <table>
+      <thead><tr><th>Travel sample</th><th>Sales Order portfolio</th><th>Transfer</th></tr></thead>
+      <tbody>
+        <tr><td>Travel</td><td>SalesOrderRequest</td><td>Aggregate root and workflow owner.</td></tr>
+        <tr><td>Booking</td><td>Item</td><td>Composition child with dependent lifecycle.</td></tr>
+        <tr><td>Agency/Customer</td><td>Sales organization/Sold-to references</td><td>Independent reference data; domain meanings are not identical.</td></tr>
+        <tr><td>Flight/Carrier/Connection</td><td>Product and other released reference data</td><td>Association/value-help pattern only; do not pretend the business semantics match.</td></tr>
+        <tr><td>TotalPrice</td><td>OrderTotal</td><td>Aggregate-derived value triggered by child changes.</td></tr>
+        <tr><td>acceptTravel</td><td>Release</td><td>Explicit state-changing action, strengthened with real transition and authorization rules.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Known traps in this sample</h2>
+    <ul>
+      <li>Do not copy the OData V2 choice into a new project; it reflects the 2020 environment.</li>
+      <li>The repository stores service-binding creation instructions, not a serialized binding source artifact.</li>
+      <li>Do not copy authorization helpers that force the result to allowed for testing.</li>
+      <li>Do not copy the adjusted exercise DCL that replaces authorization conditions with an unrestricted condition.</li>
+      <li>Do not treat maximum-ID-plus-one logic as safe, unique, or gap-free numbering.</li>
+      <li>Do not infer production architecture from an instructional Travel domain.</li>
+      <li>Do not let UI feature control replace backend invariants or authorization.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Use this analysis with <a href="../lessons/0001-trace-a-rap-request.html">Lesson 1</a> and <a href="../lessons/0002-model-the-sales-order-aggregate.html">Lesson 2</a>. The detailed evidence map is in <a href="../research/opensap-rap-sample-analysis.md">the research record</a>. Ask your teaching agent to explain any sample line before adapting it.</p>
+  </footer>
+</main>
+</body>
+</html>
