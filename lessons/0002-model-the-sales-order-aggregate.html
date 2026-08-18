@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 2 — Model the Sales Order Aggregate</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 2 · 30 minutes · Domain model</div>
+        <h1>Choose the aggregate boundary</h1>
+        <p class="lede">
+          Before writing CDS syntax, decide what changes together, what has an
+          independent lifecycle, and which entity owns transactional
+          consistency.
+        </p>
+      </header>
+
+      <section>
+        <h2>The tangible win</h2>
+        <div class="callout success">
+          <p>
+            Design the root and child topology for the
+            <strong>Sales Order Change &amp; Release Workbench</strong>, then
+            defend composition versus association using lifecycle—not database
+            cardinality.
+          </p>
+        </div>
+        <p>
+          This lesson builds on your Lesson 1 result: the business object owns
+          the invariant, so its boundary must include the state needed to
+          enforce that invariant.
+        </p>
+      </section>
+
+      <section>
+        <h2>Start with the business transaction</h2>
+        <p>
+          A sales coordinator creates one request, adds items, submits it, and
+          an authorized user releases or holds it. The request is incomplete
+          without its items; a customer or product exists independently of this
+          request.
+        </p>
+        <div class="grid">
+          <article class="card">
+            <h3>Root: SalesOrderRequest</h3>
+            <p>
+              Owns identity, organizational context, sold-to reference,
+              requested date, currency, total, status, and audit fields.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Child: Item</h3>
+            <p>
+              Owned by one request. Holds product reference, quantity/unit,
+              simplified unit price, derived net amount, and requested date.
+            </p>
+          </article>
+          <article class="card">
+            <h3>References: Customer and Product</h3>
+            <p>
+              Exist independently and are referenced by association. Deleting a
+              request must not delete customer or product master data.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>Composition is lifecycle ownership</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Composition</th>
+              <th>Association</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Can the target exist meaningfully without this parent?</td>
+              <td>Usually no</td>
+              <td>Usually yes</td>
+            </tr>
+            <tr>
+              <td>Who owns creation/deletion lifecycle?</td>
+              <td>The aggregate root</td>
+              <td>The referenced entity or another BO</td>
+            </tr>
+            <tr>
+              <td>Where do lock and authorization commonly originate?</td>
+              <td>Root; child may depend on it</td>
+              <td>Each independent BO owns its concerns</td>
+            </tr>
+            <tr>
+              <td>Is cardinality alone enough to decide?</td>
+              <td>No</td>
+              <td>No</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Inspect SAP's RAP110 root
+          <a
+            href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.ddls.asddls#L4-L12"
+            >declaring the Booking composition</a
+          >, then the child
+          <a
+            href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_bookingtp_sol.ddls.asddls#L4-L16"
+            >declaring its parent relationship</a
+          >. In the behavior definition, notice how the child declares
+          <a
+            href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.bdef.asbdef#L88-L100"
+            >create-by-association and dependent lock/authorization</a
+          >.
+        </p>
+      </section>
+
+      <section>
+        <h2>Proposed portfolio model</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Entity</th>
+              <th>Fields to begin with</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>SalesOrderRequest</code></td>
+              <td>
+                RequestUUID, RequestNumber, SalesOrganization,
+                DistributionChannel, Division, SoldToParty,
+                RequestedDeliveryDate, TransactionCurrency, TotalAmount, Status,
+                audit fields
+              </td>
+              <td>Owns the workflow and aggregate-wide invariants.</td>
+            </tr>
+            <tr>
+              <td><code>Item</code></td>
+              <td>
+                RequestUUID, ItemUUID, ItemNumber, Product, RequestedQuantity,
+                QuantityUnit, UnitPrice, NetAmount, RequestedDeliveryDate
+              </td>
+              <td>
+                Owned line-level intent; contributes to header validity and
+                total.
+              </td>
+            </tr>
+            <tr>
+              <td><code>Customer</code></td>
+              <td>Reference only in this project</td>
+              <td>
+                Independent master-data lifecycle; do not model it as an owned
+                child.
+              </td>
+            </tr>
+            <tr>
+              <td><code>Product</code></td>
+              <td>Reference only in this project</td>
+              <td>
+                Independent master-data lifecycle; do not model it as an owned
+                child.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <p>
+            This is an SD-inspired learning model, not standard SAP SD. Pricing,
+            ATP, credit management, partner determination, delivery, billing,
+            and document flow remain outside this aggregate.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Boundary drill</h2>
+        <p>Decide before opening the explanation.</p>
+        <details>
+          <summary>Order Item: composition or association?</summary>
+          <p>
+            <strong>Composition.</strong> The item is created and deleted
+            through its request and participates in request-wide invariants such
+            as “a submitted request has at least one valid item.”
+          </p>
+        </details>
+        <details>
+          <summary>Sold-to Customer: composition or association?</summary>
+          <p>
+            <strong>Association.</strong> The customer exists before and after
+            this request. The request references customer identity; it does not
+            own customer lifecycle.
+          </p>
+        </details>
+        <details>
+          <summary>Product: composition or association?</summary>
+          <p>
+            <strong>Association.</strong> Product master data is independently
+            managed. An item references it and may snapshot selected commercial
+            values where the simplified model requires them.
+          </p>
+        </details>
+        <details>
+          <summary>
+            Should Item be a second RAP root because it has its own table?
+          </summary>
+          <p>
+            <strong>No.</strong> A separate persistence table does not imply an
+            independent business-object lifecycle. Root choice follows
+            transactional ownership, not table count.
+          </p>
+        </details>
+      </section>
+
+      <section>
+        <h2>Your design task</h2>
+        <ol>
+          <li>
+            Draw <code>SalesOrderRequest 1 → 0..* Item</code> and label the
+            relationship.
+          </li>
+          <li>
+            Add associations from the appropriate entity to Customer and
+            Product.
+          </li>
+          <li>Circle the root and list three invariants it must protect.</li>
+          <li>Mark which amounts are entered and which are derived.</li>
+          <li>Write one sentence explaining why Item is not a root.</li>
+        </ol>
+        <p>
+          Then compare your diagram with the
+          <a
+            href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.ddls.asddls#L4-L47"
+            >RAP110 Travel root</a
+          >
+          and
+          <a
+            href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_bookingtp_sol.ddls.asddls#L4-L39"
+            >Booking child</a
+          >.
+        </p>
+      </section>
+
+      <section>
+        <h2>Retrieval check</h2>
+        <p>Answer without reopening the lesson:</p>
+        <ul class="checklist">
+          <li>
+            What lifecycle question distinguishes composition from association?
+          </li>
+          <li>Why is Item a child even though it has its own table and key?</li>
+          <li>Why are Customer and Product associations?</li>
+          <li>
+            Which entity should own the order status and aggregate total, and
+            why?
+          </li>
+          <li>
+            What lock/authorization relationship would you expect between root
+            and child?
+          </li>
+        </ul>
+        <p>
+          <strong>Pass condition:</strong> provide the diagram, three
+          invariants, and five answers. At least one invariant must require both
+          header and item state.
+        </p>
+      </section>
+
+      <section>
+        <h2>Primary source</h2>
+        <p>
+          Read the complete RAP110 root and child CDS artifacts linked above,
+          then inspect the corresponding
+          <a
+            href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.bdef.asbdef#L1-L100"
+            >managed behavior definition</a
+          >. Focus on topology, lifecycle, and dependent concerns—not Travel
+          syntax.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Ask your teaching agent to challenge your aggregate boundary before
+          implementing it. Next lesson after a pass: express this model as CDS
+          interface entities and projections.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Reference — Lesson 1 SAP Code Trail</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 1 companion · Verified 2026-08-17</div>
+        <h1>Follow RAP through real SAP code</h1>
+        <p class="lede">
+          These commit-pinned links connect every architectural notion in Lesson
+          1 to first-party SAP sample code. Read them as one request path; do
+          not copy the Travel application file by file.
+        </p>
+      </header>
+
+      <section>
+        <h2>How to read each sample</h2>
+        <div class="callout">
+          <p>
+            For every link, answer three questions:
+            <strong>what contract is declared?</strong>
+            <strong>what does RAP generate?</strong> and
+            <strong>what logic remains for the developer?</strong>
+          </p>
+        </div>
+        <p>
+          Use RAP110's <code>Travel</code> as the analogue of
+          <code>SalesOrderRequest</code>, and <code>Booking</code> as the
+          analogue of <code>Item</code>. Transfer the structure and runtime
+          reasoning—not the field names or tutorial business rules.
+        </p>
+      </section>
+
+      <section>
+        <h2>Trail A — Persistence to client</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Notion</th>
+              <th>Official sample</th>
+              <th>What to inspect</th>
+              <th>Your transfer question</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Persistence</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_atravsol.tabl.xml#L5-L22"
+                  >Travel table</a
+                >
+                ·
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_abooksol.tabl.xml#L5-L22"
+                  >Booking table</a
+                >
+              </td>
+              <td>
+                Separate active tables, keys, administrative fields, amounts,
+                currencies, and parent identity.
+              </td>
+              <td>Which fields belong to Order and which to Item?</td>
+            </tr>
+            <tr>
+              <td>CDS root and composition</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.ddls.asddls#L4-L12"
+                  >Root and <code>_Booking</code> composition</a
+                >
+                ·
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_bookingtp_sol.ddls.asddls#L4-L16"
+                  >Child and <code>to parent</code></a
+                >
+              </td>
+              <td>
+                The composition originates at the root; the child points back to
+                its parent. Together they define the BO topology.
+              </td>
+              <td>Should an Item exist independently of its Order Request?</td>
+            </tr>
+            <tr>
+              <td>Managed behavior contract</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.bdef.asbdef#L1-L11"
+                  >Base BDEF header</a
+                >
+                ·
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.bdef.asbdef#L88-L99"
+                  >Child behavior and dependency</a
+                >
+              </td>
+              <td>
+                <code>managed</code>, draft and persistence tables, locks,
+                ETags, authorization mode, numbering, mapping,
+                create-by-association, and dependent lock/authorization.
+              </td>
+              <td>
+                Which responsibilities are framework-owned, and which are your
+                code?
+              </td>
+            </tr>
+            <tr>
+              <td>Behavior implementation</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_traveltp_sol.clas.locals_imp.abap#L1-L22"
+                  >Saver and handler structure</a
+                >
+                ·
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_traveltp_sol.clas.locals_imp.abap#L122-L170"
+                  >Handler method contracts</a
+                >
+              </td>
+              <td>
+                The local handler class declares only the breakouts required by
+                the BDEF. The saver is a separate lifecycle participant.
+              </td>
+              <td>Why is there no ordinary controller class?</td>
+            </tr>
+            <tr>
+              <td>Projection CDS</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_c_traveltp_sol.ddls.asddls#L6-L9"
+                  >Transactional projection</a
+                >
+                ·
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_c_traveltp_sol.ddls.asddls#L76-L81"
+                  >Redirected composition</a
+                >
+              </td>
+              <td>
+                <code>provider contract transactional_query</code>, projection
+                source, and redirection from projected root to projected child.
+              </td>
+              <td>
+                Which internal fields should the portfolio UI never expose?
+              </td>
+            </tr>
+            <tr>
+              <td>Projection behavior</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_c_traveltp_sol.bdef.asbdef#L1-L25"
+                  >Projected operations, actions, draft, and side effects</a
+                >
+              </td>
+              <td>
+                The consumer contract explicitly reuses selected base behavior.
+                Notice that an action is not automatically public merely because
+                it exists in the base BO.
+              </td>
+              <td>Should every internal action be reachable over OData?</td>
+            </tr>
+            <tr>
+              <td>Fiori elements metadata</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_c_traveltp_sol.ddlx.asddlxs#L1-L43"
+                  >Header and facets</a
+                >
+                ·
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_c_traveltp_sol.ddlx.asddlxs#L45-L54"
+                  >Action buttons</a
+                >
+              </td>
+              <td>
+                UI annotations describe presentation and action affordances;
+                they do not implement the business rule.
+              </td>
+              <td>
+                If the button disappeared, could an EML consumer still violate
+                the invariant?
+              </td>
+            </tr>
+            <tr>
+              <td>Service definition</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_ui_travel_sol.srvd.srvdsrv#L1-L14"
+                  >Exposed entities</a
+                >
+              </td>
+              <td>
+                A small protocol-neutral exposure list. There is no business
+                implementation here.
+              </td>
+              <td>Which projections belong in your portfolio service?</td>
+            </tr>
+            <tr>
+              <td>OData V4 service binding</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_ui_travel_o4_sol.srvb.xml#L45-L75"
+                  >Binding repository metadata</a
+                >
+              </td>
+              <td>
+                The binding object points to the service definition and records
+                the OData V4 binding. In normal work, inspect and publish this
+                object in ADT rather than hand-editing its XML.
+              </td>
+              <td>
+                Why can one service definition support different bindings?
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Trail B — Put business logic in the right mechanism</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Notion</th>
+              <th>Declaration</th>
+              <th>Implementation or metadata</th>
+              <th>What to learn</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Determination</td>
+              <td rowspan="3">
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.bdef.asbdef#L35-L53"
+                  >Rules and actions in the base BDEF</a
+                >
+              </td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_traveltp_sol.clas.locals_imp.abap#L271-L370"
+                  ><code>calculateTotalPrice</code> and helper</a
+                >
+                ·
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_bookingtp_sol.clas.locals_imp.abap#L63-L79"
+                  >child triggers parent recalculation</a
+                >
+              </td>
+              <td>
+                Observe trigger declaration, aggregate reads, child-to-parent
+                navigation, and idempotent derived values. This is the closest
+                sample for item changes recalculating an order total.
+              </td>
+            </tr>
+            <tr>
+              <td>Validation</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_traveltp_sol.clas.locals_imp.abap#L516-L556"
+                  ><code>validateDates</code></a
+                >
+              </td>
+              <td>
+                Follow the path from current buffered state to
+                <code>failed</code> and <code>reported</code>. Adapt it to
+                requested-date and non-empty-order invariants.
+              </td>
+            </tr>
+            <tr>
+              <td>Action</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_traveltp_sol.clas.locals_imp.abap#L208-L226"
+                  ><code>acceptTravel</code></a
+                >
+                ·
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_traveltp_sol.clas.locals_imp.abap#L228-L269"
+                  ><code>createTravel</code> aggregate action</a
+                >
+              </td>
+              <td>
+                The first is a clear state change; the second creates root and
+                child together. Adapt the first to <code>Release</code>, then
+                explain its allowed pre-state.
+              </td>
+            </tr>
+            <tr>
+              <td>Instance feature control</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.bdef.asbdef#L21-L39"
+                  >Feature-controlled fields/actions</a
+                >
+              </td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_traveltp_sol.clas.locals_imp.abap#L175-L206"
+                  ><code>get_instance_features</code></a
+                >
+              </td>
+              <td>
+                Return operation/field availability from current instance state.
+                Adapt it so Release is enabled only for an Approved order.
+              </td>
+            </tr>
+            <tr>
+              <td>Side effects</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.bdef.asbdef#L24-L30"
+                  >Root declarations</a
+                >
+                ·
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.bdef.asbdef#L120-L125"
+                  >Child-to-root dependencies</a
+                >
+              </td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_c_traveltp_sol.bdef.asbdef#L1-L25"
+                  >Exposure in projection behavior</a
+                >
+              </td>
+              <td>
+                Side effects tell an OData client what to reread; they do not
+                calculate the value. Adapt child quantity/price changes to
+                refresh item and header totals.
+              </td>
+            </tr>
+            <tr>
+              <td>Authorization</td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.bdef.asbdef#L1-L11"
+                  >Authorization declaration</a
+                >
+              </td>
+              <td>
+                <a
+                  href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_traveltp_sol.clas.locals_imp.abap#L136-L174"
+                  >Empty RAP110 authorization seam</a
+                >
+                ·
+                <a
+                  href="https://github.com/SAP-samples/abap-cheat-sheets/blob/f639ab509a4db1823d4fe8d0c16a15eb10e4c939/src/zbp_demo_abap_rap_ro_u.clas.locals_imp.abap#L682-L707"
+                  >concrete instance-response example</a
+                >
+              </td>
+              <td>
+                <strong>Caution:</strong> RAP110 declares the hook but
+                implements no real permission decision. The cheat-sheet sample
+                shows allowed/unauthorized response mechanics, but its toy field
+                rule is not role security. Use SAP's
+                <a
+                  href="https://help.sap.com/docs/abap-cloud/abap-rap/authorization-control"
+                  >Authorization Control documentation</a
+                >
+                with your real authorization-object design.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Trail C — Transaction, save, and proof</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Read from the buffer</h3>
+            <p>
+              Inspect RAP100's
+              <a
+                href="https://github.com/SAP-samples/abap-platform-rap100/blob/0c84e7e44b7c024fbc129ca6d7401aef1ea1d0b1/src/zrap100_cl_eml_sol.clas.abap#L87-L114"
+                >EML read example</a
+              >. Identify the BO contract being consumed and the response
+              structures.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Create and commit</h3>
+            <p>
+              Inspect the
+              <a
+                href="https://github.com/SAP-samples/abap-platform-rap100/blob/0c84e7e44b7c024fbc129ca6d7401aef1ea1d0b1/src/zrap100_cl_eml_sol.clas.abap#L150-L190"
+                >EML create example</a
+              >. Locate <code>mapped</code>, <code>failed</code>,
+              <code>reported</code>, and the commit boundary.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Custom save breakouts</h3>
+            <p>
+              RAP110 demonstrates
+              <a
+                href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_traveltp_sol.clas.locals_imp.abap#L22-L79"
+                ><code>adjust_numbers</code></a
+              >
+              and
+              <a
+                href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_bp_traveltp_sol.clas.locals_imp.abap#L81-L117"
+                ><code>save_modified</code></a
+              >. Standard managed persistence is runtime-generated, so an
+              ordinary application <code>INSERT</code>/<code>UPDATE</code> is
+              intentionally absent.
+            </p>
+          </article>
+          <article class="card">
+            <h3>ABAP Unit through EML</h3>
+            <p>
+              Inspect
+              <a
+                href="https://github.com/SAP-samples/abap-platform-rap100/blob/0c84e7e44b7c024fbc129ca6d7401aef1ea1d0b1/src/zrap100_tc_travel_eml_sol.clas.abap#L39-L68"
+                >test-double setup</a
+              >, then the
+              <a
+                href="https://github.com/SAP-samples/abap-platform-rap100/blob/0c84e7e44b7c024fbc129ca6d7401aef1ea1d0b1/src/zrap100_tc_travel_eml_sol.clas.abap#L71-L132"
+                >action, commit, and assertions</a
+              >.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>Active-reading exercise</h2>
+        <ol>
+          <li>
+            Open the RAP110 root CDS, base BDEF, projection CDS/BDEF, service
+            definition, and binding in that order.
+          </li>
+          <li>
+            Draw a line from each artifact to the next. Label the contract
+            crossing the line.
+          </li>
+          <li>
+            Open <code>acceptTravel</code>. Predict the buffer change before
+            reading the method body.
+          </li>
+          <li>
+            Open <code>validateDates</code>. Find exactly where failure identity
+            and user-facing messages separate.
+          </li>
+          <li>
+            Write a five-row mapping from Travel terms to your Sales Order
+            portfolio terms.
+          </li>
+        </ol>
+        <p>
+          <strong>Pass condition:</strong> explain why the metadata extension,
+          service definition, and service binding contain no order-release
+          invariant.
+        </p>
+      </section>
+
+      <section>
+        <h2>Version note</h2>
+        <p>
+          The links are pinned to RAP100 commit <code>0c84e7e</code> and RAP110
+          commit <code>8fb9d7b</code>, verified on 2026-08-17. This keeps line
+          references stable. When importing into ADT, use the repository branch
+          compatible with your ABAP Platform release.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Return to
+          <a href="../lessons/0001-trace-a-rap-request.html">Lesson 1</a> or use
+          the compact <a href="rap-runtime-map.html">RAP runtime map</a>. Ask
+          your teaching agent about any mismatch between the sample and your
+          backend release.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

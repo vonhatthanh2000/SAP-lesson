@@ -11,12 +11,16 @@ This workspace is a one-month, evidence-driven path toward SAP RAP interview rea
 5. Draw the request flow from memory and answer the lesson's five retrieval questions before reading further.
 6. Review the complete [one-month roadmap](./ROADMAP.md), then schedule only Week 1 on your calendar.
 
+Current lesson: [Lesson 2 — Model the Sales Order Aggregate](./lessons/0002-model-the-sales-order-aggregate.html).
+
 ## Course documents
 
 - [Mission](./MISSION.md) — the outcome every lesson must serve.
 - [Roadmap](./ROADMAP.md) — daily practice, portfolio evidence, video plan, and interview gates.
 - [Resources](./RESOURCES.md) — curated SAP documentation and first-party samples.
 - [RAP runtime map](./reference/rap-runtime-map.html) — printable architecture and responsibility reference.
+- [Lesson 1 code trail](./reference/lesson-1-code-trail.html) — exact first-party SAP sample files for every Lesson 1 notion.
+- [Glossary](./GLOSSARY.md) — terminology demonstrated and established during retrieval checks.
 - [Primary-source research](./research/sap-rap-primary-sources.md) — detailed evidence, environment boundaries, and source map.
 
 ## First environment decision
