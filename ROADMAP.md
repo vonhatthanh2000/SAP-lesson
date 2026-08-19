@@ -46,6 +46,17 @@ Use the same loop each day:
 
 Do not record polished videos every day. Capture rough clips and notes while building; publish at weekly milestones.
 
+## Interview-bank loop
+
+Use the [interview-readiness map](./reference/interview-readiness-map.html) to connect each build step to the relevant prompts in the [160-question bank](./reference/SAP_TechConsultant_Interview_160Q.html). The bank is a practice instrument, not an authoritative source. For every targeted question:
+
+1. Answer from memory in 60–90 seconds.
+2. Structure the answer as **concept → runtime consequence → design choice → portfolio evidence**.
+3. Correct factual gaps with SAP Help or a commit-pinned `SAP-samples` artifact.
+4. Mark a question ready only after answering it on two separate days and pointing to evidence from the project.
+
+The one-month core targets RAP, operational CDS/Fiori, and selected ABAP/BTP prerequisites. Classic RICEFW, CPI, and PI/PO remain separate expansion tracks unless the mission is explicitly broadened.
+
 ## Week 1 — Build the RAP mental model
 
 **Outcome:** explain the complete request lifecycle and deliver a read-only vertical slice.

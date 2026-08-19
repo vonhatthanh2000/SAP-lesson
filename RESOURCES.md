@@ -45,6 +45,13 @@
 - [SAP Help: Sales Order EML Example](https://help.sap.com/docs/SAP_S4HANA_CLOUD/6aa39f1ac05441e5a23f484f31e477e7/d2bc96018de74001af7ad191e06b9382.html)
   First-party example of write access through `I_SalesOrderTP`. Use for: the optional local S/4 adapter only after confirming the BO is released in the target system.
 
+## Practice prompts (not knowledge sources)
+
+- [SAP Technical Consultant Interview Q&A](./reference/SAP_TechConsultant_Interview_160Q.html)
+  A 160-question retrieval bank spanning ABAP, CDS, Fiori, RAP, CPI, BTP, and PI/PO. Use its questions for practice, but verify its draft answers against the primary sources above.
+- [Interview-readiness map](./reference/interview-readiness-map.html)
+  Maps mission-aligned prompts to lessons and portfolio evidence while identifying topics that require a separate expansion track.
+
 ## Wisdom (Communities)
 
 - [SAP Community: Application Development](https://community.sap.com/t5/application-development/ct-p/application-development)

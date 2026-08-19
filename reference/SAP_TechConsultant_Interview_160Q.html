@@ -1,0 +1,2148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAP Technical Consultant — Interview Q&amp;A (160)</title>
+    <style>
+      :root {
+        --ink: #16222e;
+        --body: #39424c;
+        --muted: #7a828b;
+        --accent: #0a6ed1;
+        --accent-d: #0a4e8c;
+        --line: #e6e9ed;
+        --card: #fbfcfd;
+        --chipbg: #eef4fb;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        color: var(--body);
+        line-height: 1.6;
+        background: #f4f6f8;
+        font-size: 15px;
+      }
+      .wrap {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 0 18px 80px;
+      }
+      header {
+        background: linear-gradient(135deg, var(--accent-d), var(--accent));
+        color: #fff;
+        padding: 34px 22px 30px;
+        border-radius: 0 0 18px 18px;
+        margin-bottom: 22px;
+      }
+      header h1 {
+        font-size: 23px;
+        font-weight: 700;
+      }
+      header p {
+        opacity: 0.92;
+        font-size: 13.5px;
+        margin-top: 6px;
+      }
+      .hmeta {
+        margin-top: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+      .hmeta span {
+        background: rgba(255, 255, 255, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+      }
+      .bar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #f4f6f8ee;
+        backdrop-filter: blur(6px);
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn.sec {
+        background: #fff;
+        color: var(--accent);
+        border: 1px solid var(--accent);
+      }
+      .note {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .toc {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px 16px;
+        margin-bottom: 24px;
+      }
+      .toc a {
+        display: flex;
+        justify-content: space-between;
+        text-decoration: none;
+        color: var(--ink);
+        padding: 6px 4px;
+        border-bottom: 1px dashed var(--line);
+        font-size: 14px;
+      }
+      .toc a:last-child {
+        border-bottom: none;
+      }
+      .toc a .c {
+        color: var(--accent);
+        font-weight: 600;
+        font-size: 12.5px;
+      }
+      .sec {
+        margin: 30px 0 8px;
+        padding-top: 8px;
+      }
+      .sec h2 {
+        font-size: 18px;
+        color: var(--ink);
+        font-weight: 700;
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+      }
+      .sec h2 .n {
+        color: #fff;
+        background: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 2px 9px;
+        border-radius: 6px;
+      }
+      .sec .sub {
+        font-size: 12.5px;
+        color: var(--muted);
+        margin: 3px 0 12px;
+      }
+      .qa {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--accent);
+        border-radius: 9px;
+        padding: 13px 15px;
+        margin-bottom: 11px;
+      }
+      .q {
+        font-weight: 600;
+        color: var(--ink);
+        font-size: 14.5px;
+      }
+      .q .qn {
+        color: var(--accent);
+        font-weight: 700;
+        margin-right: 6px;
+      }
+      .a {
+        margin-top: 8px;
+        font-size: 13.7px;
+        color: var(--body);
+      }
+      .a b,
+      .a strong {
+        color: var(--ink);
+      }
+      code {
+        background: var(--chipbg);
+        color: var(--accent-d);
+        padding: 1px 6px;
+        border-radius: 5px;
+        font-family: "SF Mono", Menlo, Consolas, monospace;
+        font-size: 12.5px;
+      }
+      .tip {
+        margin-top: 7px;
+        font-size: 12.7px;
+        background: var(--chipbg);
+        border-radius: 7px;
+        padding: 7px 10px;
+        color: var(--accent-d);
+      }
+      .tip b {
+        color: var(--accent-d);
+      }
+      body.quiz .a {
+        display: none;
+      }
+      body.quiz .qa {
+        border-left-color: var(--muted);
+      }
+      .revealed .a {
+        display: block !important;
+      }
+      body.quiz .q {
+        cursor: pointer;
+      }
+      body.quiz .q::after {
+        content: " \25B8 tap to reveal";
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 11.5px;
+      }
+      body.quiz .revealed .q::after {
+        content: "";
+      }
+      footer {
+        margin-top: 34px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      @media print {
+        .bar {
+          display: none;
+        }
+        body {
+          background: #fff;
+        }
+        .qa {
+          break-inside: avoid;
+        }
+        header {
+          border-radius: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap" style="padding: 0">
+        <h1>SAP Technical Consultant — Interview Q&amp;A</h1>
+        <p>
+          160 most-asked questions with concise, interview-ready answers ·
+          curated at a senior (10-yr) level.
+        </p>
+        <div class="hmeta">
+          <span>ABAP / RICEFW · 50</span><span>CDS View · 30</span
+          ><span>Fiori · 10</span><span>RAP · 30</span><span>CPI · 20</span
+          ><span>BTP · 10</span><span>PI/PO · 10</span>
+        </div>
+      </div>
+    </header>
+    <div class="wrap">
+      <div class="bar">
+        <button class="btn" id="quizBtn">🎯 Quiz mode: OFF</button
+        ><button class="btn sec" onclick="window.print()">🖨️ Print / PDF</button
+        ><span class="note"
+          >Quiz mode ẩn đáp án — bấm vào câu hỏi để hiện.</span
+        >
+      </div>
+      <div class="toc">
+        <a href="#s1"
+          ><span>A. ABAP Core (RICEFW)</span><span class="c">50 Q</span></a
+        ><a href="#s2"><span>B. CDS View</span><span class="c">30 Q</span></a
+        ><a href="#s3"
+          ><span>C. Fiori (basics)</span><span class="c">10 Q</span></a
+        ><a href="#s4"><span>D. ABAP RAP</span><span class="c">30 Q</span></a
+        ><a href="#s5"
+          ><span>E. CPI (Cloud Integration)</span><span class="c">20 Q</span></a
+        ><a href="#s6"><span>F. SAP BTP</span><span class="c">10 Q</span></a
+        ><a href="#s7"><span>G. PI / PO</span><span class="c">10 Q</span></a>
+      </div>
+      <section class="sec" id="s1">
+        <h2><span class="n">A</span> ABAP Core (RICEFW)</h2>
+        <div class="sub">
+          Reports · Interfaces · Conversions · Enhancements · Forms · Workflow +
+          core ABAP
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">1.</span>What does RICEFW stand for?
+          </div>
+          <div class="a">
+            <b>R</b>eports, <b>I</b>nterfaces, <b>C</b>onversions,
+            <b>E</b>nhancements, <b>F</b>orms, <b>W</b>orkflow — the six
+            categories used to classify and scope custom (Z) developments in an
+            implementation. It is the standard framework teams use to size and
+            track WRICEF objects.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">2.</span>Difference between
+            <code>CL_SALV_TABLE</code> and <code>REUSE_ALV_GRID_DISPLAY</code>?
+          </div>
+          <div class="a">
+            <code>CL_SALV_TABLE</code> is the modern, fully OO ALV (via
+            <code>cl_salv_table=&gt;factory</code>) — clean and quick for
+            display-only lists, field catalog auto-derived. The classic
+            <code>REUSE_ALV_GRID_DISPLAY</code> /
+            <code>CL_GUI_ALV_GRID</code> is older but required for
+            <b>editable cells</b>, rich events and deep control that SALV does
+            not expose.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">3.</span>Classical vs Interactive vs ALV reports?
+          </div>
+          <div class="a">
+            <b>Classical</b> uses <code>WRITE</code> list processing (static).
+            <b>Interactive</b> adds drill-down via
+            <code>AT LINE-SELECTION</code> / <code>HIDE</code>.
+            <b>ALV</b> renders a grid with sorting, filtering, totals, export
+            and layout variants — the standard today.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">4.</span>Standard, Sorted and Hashed internal
+            tables — when to use each?
+          </div>
+          <div class="a">
+            <b>Standard</b>: index access, linear search, duplicates allowed.
+            <b>Sorted</b>: kept sorted by key, binary search, ideal for
+            range/partial-key reads. <b>Hashed</b>: unique key, hash access
+            (~O(1)), no index — best for repeated single-record lookups in
+            loops.
+            <div class="tip">
+              <b>Pro-tip:</b> Replacing a nested <code>READ TABLE</code> on a
+              standard table with a <b>hashed/sorted</b> table is one of the
+              highest-impact loop optimizations you can quote.
+            </div>
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">5.</span>Key ABAP SQL performance rules?
+          </div>
+          <div class="a">
+            Select only needed fields (avoid <code>SELECT *</code>), always
+            filter on <b>indexed fields</b>, never <code>SELECT</code> inside a
+            <code>LOOP</code>, prefer JOIN / CDS over multiple round-trips, and
+            read once into an internal table then process in memory.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">6.</span>Pitfalls of <code>FOR ALL ENTRIES</code>?
+          </div>
+          <div class="a">
+            It returns nothing if the driver table is empty (worse:
+            <b>drops the whole FAE condition</b> and can full-scan), and it
+            <b>removes duplicates</b> from the result. Always check the driver
+            isn't empty, delete duplicates, and include key fields in the field
+            list. A DB <b>JOIN</b>/CDS is usually faster.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">7.</span>BAPI vs RFC vs BDC for interfacing?
+          </div>
+          <div class="a">
+            <b>BAPI</b> = released, stable, RFC-enabled FM with business logic
+            and a documented interface. <b>RFC</b> = any remote-enabled FM.
+            <b>BDC</b> = screen-level batch input (no API) when no BAPI exists.
+            Preference: BAPI &gt; RFC &gt; BDC.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">8.</span>Structure of an IDoc?</div>
+          <div class="a">
+            <b>Control record</b> (EDIDC — sender/receiver, message &amp; basic
+            type), <b>Data records</b> (EDID4 — segments/fields),
+            <b>Status records</b> (EDIDS — processing history). Defined by a
+            Basic Type + Message Type, used in ALE/EDI.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">9.</span>Inbound vs Outbound IDoc processing?
+          </div>
+          <div class="a">
+            <b>Outbound</b>: application generates the IDoc, it flows through a
+            port to the partner. <b>Inbound</b>: the IDoc is received and a
+            <b>process code / FM</b> posts it into SAP. Partner profiles (WE20)
+            drive both directions.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">10.</span>Call Transaction vs Session method in
+            BDC?
+          </div>
+          <div class="a">
+            <b>Call Transaction</b> runs synchronously with your own error
+            handling (fast, immediate). <b>Session</b> (SM35) queues records for
+            robust, logged batch processing. Modes: <code>A</code> (all
+            screens), <code>E</code> (errors only), <code>N</code> (no display).
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">11.</span>Which tools for data conversion /
+            migration?
+          </div>
+          <div class="a">
+            <b>LSMW</b> (config-driven, multiple techniques), <b>BDC</b> (screen
+            recording), <b>BAPI</b> (cleanest, API-based), and in S/4HANA the
+            <b>Migration Cockpit</b> (LTMC / LTMOM). Prefer BAPI or Migration
+            Cockpit.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">12.</span>What is the Enhancement Framework?
+          </div>
+          <div class="a">
+            It unifies non-modification techniques: <b>implicit</b> enhancements
+            (predefined spots at start/end of FMs/methods/forms),
+            <b>explicit</b> enhancement points/sections, classic
+            <b>user/customer exits</b> (SMOD/CMOD), and <b>BAdIs</b> (OO).
+            Enhancements are upgrade-safe; modifications are not.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">13.</span>Classic BAdI vs new (kernel) BAdI?
+          </div>
+          <div class="a">
+            <b>Classic BAdI</b> (SE18/SE19) is object-based with single/multiple
+            use and filters. <b>New/kernel BAdI</b> sits in an enhancement spot,
+            is faster, supports a <b>fallback class</b>, and integrates with the
+            switch framework.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">14.</span>User exit vs BAdI?</div>
+          <div class="a">
+            A <b>user exit</b> is an empty subroutine in a SAP include (e.g.
+            <code>MV45AFZZ</code> in SD) — procedural, limited. A <b>BAdI</b> is
+            an OO interface allowing multiple, filter-based implementations —
+            more flexible, the modern choice.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">15.</span>SAPscript vs SmartForms vs Adobe Forms?
+          </div>
+          <div class="a">
+            <b>SAPscript</b>: oldest, client-dependent. <b>SmartForms</b>:
+            graphical, generates its own FM, no client dependency.
+            <b>Adobe Forms</b>: interactive, print-quality PDF, offline
+            scenarios — strategic on S/4.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">16.</span>Core concept of SAP Business Workflow?
+          </div>
+          <div class="a">
+            An <b>event</b> triggers a workflow whose <b>tasks/steps</b> are
+            routed to <b>agents</b> by rules; a <b>container</b> carries the
+            data. Model in SWDD, monitor in SWI1. Automates approvals and
+            multi-actor processes.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">17.</span>Field-symbols vs data references?
+          </div>
+          <div class="a">
+            <b>Field-symbols</b> (<code>ASSIGN</code>) point to existing memory
+            — no copy, great for <code>LOOP ... ASSIGNING</code>.
+            <b>Data references</b> (<code>REF</code>, <code>CREATE DATA</code>)
+            create/address dynamic objects for generic programming.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">18.</span>Four pillars of OOP in ABAP?
+          </div>
+          <div class="a">
+            <b>Encapsulation</b>, <b>Inheritance</b> (single,
+            <code>INHERITING FROM</code>), <b>Polymorphism</b> (redefinition /
+            interfaces), <b>Abstraction</b> (abstract classes &amp; interfaces).
+            Multiple interface implementation, single inheritance.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">19.</span>Global vs local class?</div>
+          <div class="a">
+            A <b>global class</b> (SE24 / class pool) is repository-wide and
+            reusable. A <b>local class</b> is defined inside one program and
+            only visible there — good for helper logic.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">20.</span>Class-based exception handling?
+          </div>
+          <div class="a">
+            <code>TRY … CATCH … CLEANUP … ENDTRY</code> with classes rooted at
+            <code>CX_ROOT</code>. Categories:
+            <code>CX_STATIC_CHECK</code> (declare/handle),
+            <code>CX_DYNAMIC_CHECK</code>, <code>CX_NO_CHECK</code> (runtime).
+            Replaces relying on <code>SY-SUBRC</code>.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">21.</span>How do you debug efficiently?
+          </div>
+          <div class="a">
+            Session/external <b>breakpoints</b>, <b>watchpoints</b> (stop on
+            variable change), inspect call stack and internal tables,
+            conditional breakpoints in loops. <code>/h</code> starts the
+            debugger; checkpoints help in background/RAP.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">22.</span>Which performance-analysis tools do you
+            use?
+          </div>
+          <div class="a">
+            <b>ST05</b> (SQL/RFC/enqueue trace), <b>SAT/SE30</b> (runtime
+            trace), <b>ST12</b> (single-transaction combined trace),
+            <b>SQLM/SWLT</b> (SQL monitor), and <b>ATC / Code Inspector</b> for
+            static findings.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">23.</span>How does SAP locking work?
+          </div>
+          <div class="a">
+            Define a <b>lock object</b> in SE11 (EZ*) generating
+            <code>ENQUEUE_</code>/<code>DEQUEUE_</code> FMs. These are
+            <b>logical (SAP) locks</b> in the enqueue server, independent of DB
+            locks, to serialize access to business objects.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">24.</span>V1 vs V2 update, and update task?
+          </div>
+          <div class="a">
+            <b>V1</b>: synchronous/time-critical (document posting). <b>V2</b>:
+            deferred, non-critical (statistics). Register with
+            <code>CALL FUNCTION … IN UPDATE TASK</code>;
+            <code>COMMIT WORK</code> triggers execution.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">25.</span>Database LUW vs SAP LUW?
+          </div>
+          <div class="a">
+            A <b>DB LUW</b> is one atomic DB transaction. An
+            <b>SAP LUW</b> bundles several DB LUWs (often via update task) into
+            one business transaction finalized by a single
+            <code>COMMIT WORK</code> — all-or-nothing consistency.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">26.</span>Modularization units in ABAP?
+          </div>
+          <div class="a">
+            <b>Include</b>, <b>Subroutine/FORM</b> (procedural, obsolete in OO),
+            <b>Function Module</b> (reusable, remote-enabled), <b>Method</b> (OO
+            — preferred). Clean ABAP favors small methods.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">27.</span>Transparent vs pooled vs cluster tables?
+          </div>
+          <div class="a">
+            <b>Transparent</b>: 1:1 with a physical DB table (standard).
+            <b>Pooled/cluster</b>: many logical tables in one physical table to
+            save space — legacy, mostly gone in S/4HANA.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">28.</span>Table buffering types?</div>
+          <div class="a">
+            <b>Single-record</b>, <b>generic</b> (by leading key fields),
+            <b>full</b>. Use for small, read-mostly config tables; avoid on
+            frequently changed or very large tables.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">29.</span>When do you create a secondary index?
+          </div>
+          <div class="a">
+            When large tables are frequently filtered on non-primary-key fields.
+            It speeds reads but slows inserts/updates, so index only columns
+            that genuinely improve selective access.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">30.</span>What is 'code pushdown' and how do you
+            enforce quality?
+          </div>
+          <div class="a">
+            <b>Code pushdown</b> = do heavy data work in the DB (CDS, AMDP) not
+            ABAP loops — key for HANA. Enforce quality with <b>ATC</b> / Code
+            Inspector, <b>ABAP Unit</b> tests and Clean ABAP guidelines.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">31.</span><code>SELECT SINGLE</code> vs
+            <code>SELECT ... UP TO 1 ROWS</code>?
+          </div>
+          <div class="a">
+            <b>SELECT SINGLE</b> reads one row by (ideally full) key — with a
+            partial key the DB returns an arbitrary match.
+            <b>UP TO 1 ROWS … ORDER BY</b> lets you control <i>which</i> row
+            (e.g. latest). Use SINGLE with full key; UP TO 1 ROWS + ORDER BY
+            when you need a specific first row.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">32.</span><code>TYPE</code> vs <code>LIKE</code>?
+          </div>
+          <div class="a">
+            <b>TYPE</b> refers to a data type (DDIC/local/built-in).
+            <b>LIKE</b> refers to an existing data object, inheriting its type.
+            Prefer <b>TYPE</b> in modern ABAP; use LIKE only to mirror an
+            existing variable.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">33.</span>Prerequisites for
+            <code>BINARY SEARCH</code> and
+            <code>DELETE ADJACENT DUPLICATES</code>?
+          </div>
+          <div class="a">
+            Both need the table <b>sorted</b> by the relevant key first. BINARY
+            SEARCH on unsorted data misses hits; DELETE ADJACENT DUPLICATES only
+            removes <i>consecutive</i> duplicates. With sorted/hashed tables,
+            key access is automatic — no BINARY SEARCH needed.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">34.</span>What are internal-table secondary keys
+            (7.40+)?
+          </div>
+          <div class="a">
+            Additional <b>sorted or hashed</b> keys defined on a standard table
+            to speed alternate access paths (<code>READ/LOOP … USING KEY</code>)
+            without a second table. Trades memory/maintenance for read speed.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">35.</span>When do you use <code>COLLECT</code>?
+          </div>
+          <div class="a">
+            To aggregate numeric fields by a (non-numeric) key: if the key
+            exists it sums the numeric components, otherwise inserts. Cleaner
+            than READ+MODIFY for summing by key — ideal for building totals.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">36.</span>SAP memory vs ABAP memory?
+          </div>
+          <div class="a">
+            <b>SAP memory</b> (SPA/GPA, <code>SET/GET PARAMETER</code>) is
+            cross-session, user-wide (carry values between transactions).
+            <b>ABAP memory</b> (<code>EXPORT/IMPORT … TO MEMORY ID</code>) lives
+            within one internal session/call stack (e.g. passing data to
+            <code>CALL TRANSACTION</code>).
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">37.</span>How does
+            <code>AUTHORITY-CHECK</code> work?
+          </div>
+          <div class="a">
+            It checks the user against an <b>authorization object</b>'s fields;
+            <code>SY-SUBRC = 0</code> means authorized. Custom
+            reports/transactions must add explicit checks — the object is
+            defined in SU21 and granted via PFCG roles. A start-of-transaction
+            check alone isn't enough for sensitive data.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">38.</span>Message types E, W, I, S, A, X?
+          </div>
+          <div class="a">
+            <b>E</b> error (stops), <b>W</b> warning, <b>I</b> information
+            (popup, continues), <b>S</b> success (status line, next screen),
+            <b>A</b> abort (terminates), <b>X</b> exit/dump. In background, E
+            behaves like A.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">39.</span>Key selection-screen events?
+          </div>
+          <div class="a">
+            <code>INITIALIZATION</code> (defaults before display),
+            <code>AT SELECTION-SCREEN</code> (validate input),
+            <code>AT SELECTION-SCREEN ON &lt;field&gt;</code> and
+            <code>OUTPUT</code> (PBO). <b>Variants</b> store reusable input sets
+            for scheduling.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">40.</span>sRFC vs aRFC vs tRFC vs qRFC?
+          </div>
+          <div class="a">
+            <b>sRFC</b>: synchronous (caller waits). <b>aRFC</b>:
+            asynchronous/parallel with callback. <b>tRFC</b>: transactional,
+            executed once via a queue table. <b>qRFC</b>: queued tRFC with
+            guaranteed <b>ordering</b> (SMQ1/SMQ2). Choose by
+            reliability/ordering needs.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">41.</span>Why call
+            <code>BAPI_TRANSACTION_COMMIT</code>?
+          </div>
+          <div class="a">
+            BAPIs don't commit internally — you must call
+            <code>BAPI_TRANSACTION_COMMIT</code> (or ROLLBACK on error) to close
+            the LUW. This lets you chain several BAPIs in one transaction. Use
+            <code>WAIT = 'X'</code> to ensure the update finished before reading
+            back.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">42.</span>IDoc status codes &amp; how to reprocess?
+          </div>
+          <div class="a">
+            Outbound e.g. <b>03</b> (passed to port), <b>12</b> (dispatched);
+            inbound <b>53</b> (posted OK), <b>51</b> (application error),
+            <b>64</b> (ready to post). Reprocess errored IDocs via <b>BD87</b>,
+            or edit/test with <b>WE19</b>. Status 51 usually means a business
+            validation failed.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">43.</span>What are change pointers?
+          </div>
+          <div class="a">
+            For master-data distribution, SAP logs field changes in change
+            pointers (BDCP/BDCPV). Activate per message type (BD50) and field
+            (BD52), then <b>RBDMIDOC</b> generates delta IDocs. Lets you send
+            only what changed.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">44.</span>Number ranges (SNRO) and buffering?
+          </div>
+          <div class="a">
+            Define number range objects/intervals;
+            <code>NUMBER_GET_NEXT</code> fetches the next value.
+            <b>Buffering</b> boosts performance but causes gaps and
+            non-sequential numbers — fine unless gap-free numbering is legally
+            required.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">45.</span>Background jobs — how do you schedule and
+            monitor?
+          </div>
+          <div class="a">
+            Define in <b>SM36</b> (job → steps → start condition: time, event,
+            after job, periodic); monitor logs/spool in <b>SM37</b>.
+            Event-driven jobs trigger on <code>SAP_END_OF_JOB</code> or custom
+            events (<code>BP_EVENT_RAISE</code>). Use job classes for priority.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">46.</span>What is AMDP and when do you use it?
+          </div>
+          <div class="a">
+            <b>ABAP-Managed Database Procedure</b> — SQLScript written inside an
+            ABAP method (<code>BY DATABASE PROCEDURE</code>), executed on HANA.
+            Use for complex set/loop logic CDS can't express while keeping
+            pushdown; it's DB-specific and heavier than CDS.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">47.</span>ABAP proxy vs RFC/BAPI for interfacing?
+          </div>
+          <div class="a">
+            A <b>proxy</b> (generated from a service interface/WSDL) exchanges
+            structured XML and is standard for PI/PO / web-service style,
+            loosely-coupled integration. <b>RFC/BAPI</b> is tighter,
+            function-call style, best for synchronous SAP-to-SAP. Proxies
+            decouple contract from implementation.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">48.</span>What is the Table Maintenance Generator
+            (SM30/SE54)?
+          </div>
+          <div class="a">
+            It generates a standard maintenance dialog (<b>SM30</b>) for a
+            custom table so functional users maintain config without a program.
+            Assign a maintenance view + auth group, add events for validation.
+            Backbone of Customizing-table-driven design.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">49.</span>How do you unit-test ABAP?
+          </div>
+          <div class="a">
+            With <b>ABAP Unit</b> — local test classes (<code>FOR TESTING</code
+            >) using <code>cl_abap_unit_assert</code>. Isolate dependencies via
+            test seams / dependency injection / the test-double framework.
+            Essential for RAP and Clean ABAP; runs via ATC.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">50.</span><code>SUBMIT</code> vs
+            <code>CALL TRANSACTION</code> vs <code>CALL FUNCTION</code>?
+          </div>
+          <div class="a">
+            <b>SUBMIT</b> runs a report program (with selection screen/variant,
+            optionally <code>AND RETURN</code>). <b>CALL TRANSACTION</b> runs a
+            T-code (optionally with BDC data). <b>CALL FUNCTION</b> executes a
+            function module (local/remote). Pick by the reusable unit type.
+          </div>
+        </div>
+      </section>
+      <section class="sec" id="s2">
+        <h2><span class="n">B</span> CDS View</h2>
+        <div class="sub">
+          Core Data Services — the data-modeling backbone of S/4HANA
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">1.</span>What is a CDS view? ABAP CDS vs HANA CDS?
+          </div>
+          <div class="a">
+            CDS = <b>Core Data Services</b>, a semantic data model in DDL pushed
+            to the DB. <b>ABAP CDS</b> is activated in the ABAP dictionary
+            (transportable, DB-agnostic, framework-integrated) and recommended
+            for S/4; <b>HANA CDS</b> (.hdbdd) is HANA-native.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">2.</span>CDS view vs classic DDIC view?
+          </div>
+          <div class="a">
+            CDS supports
+            <b
+              >associations, annotations, parameters, expressions, aggregations,
+              unions and built-in client handling</b
+            >
+            — none offered by a classic DDIC view. CDS is also the base for
+            OData, RAP and analytics.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">3.</span>What are annotations and why do they
+            matter?
+          </div>
+          <div class="a">
+            Metadata (prefixed <code>@</code>) steering framework behavior —
+            <code>@OData.publish</code>, <code>@UI.*</code>,
+            <code>@Analytics.dataCategory</code>, <code>@ObjectModel</code>,
+            <code>@Semantics</code>. One artifact declaratively drives UI, OData
+            and analytics.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">4.</span>Association vs JOIN?</div>
+          <div class="a">
+            A <b>JOIN</b> always executes. An <b>association</b> is a reusable
+            'join-on-demand' resolved only when its path is used — lighter, and
+            it exposes navigation for OData/Fiori.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">5.</span>What is the Virtual Data Model (VDM)?
+          </div>
+          <div class="a">
+            A layering convention: <b>Basic/Interface</b> views (close to
+            tables, reusable), <b>Composite</b> (combine),
+            <b>Consumption</b> (exposed to UI/OData). Keeps models clean and
+            upgrade-stable.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">6.</span><code>@OData.publish:true</code> vs
+            Service Definition + Binding?
+          </div>
+          <div class="a">
+            <code>@OData.publish</code> auto-generates a service fast but with
+            little control. A <b>Service Definition + Binding</b> (RAP way)
+            exposes selected entities, lets you pick <b>V2/V4</b> and version
+            cleanly — preferred for production.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">7.</span>How do CDS parameters work?
+          </div>
+          <div class="a">
+            Declared with <code>with parameters p_date : abap.dats</code> and
+            used in SELECT/WHERE (e.g. currency conversion by date). Values are
+            supplied at consumption via OData, another CDS, or ABAP SQL.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">8.</span>What makes a CDS view 'analytical'?
+          </div>
+          <div class="a">
+            Annotations like
+            <code>@Analytics.dataCategory: #CUBE/#DIMENSION</code>, measures
+            with <code>@DefaultAggregation</code>, exposure as a query. Feeds
+            the Analytical List Page and analytical apps.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">9.</span>How is authorization handled in CDS?
+          </div>
+          <div class="a">
+            Via <b>DCL</b> — an access-control object restricting rows, usually
+            mapping to PFCG through <code>aspect pfcg_auth</code>. It enforces
+            row-level security automatically for every consumer.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">10.</span>How do you extend a CDS view without
+            modifying it?
+          </div>
+          <div class="a">
+            Use an <b>extend view / EXTEND VIEW ENTITY</b> to append custom
+            fields (extend the underlying append structure for persisted ones) —
+            leaving the SAP object untouched, core to <b>Clean Core</b>.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">11.</span>What is association cardinality and why
+            does it matter?
+          </div>
+          <div class="a">
+            Declared as
+            <code>association [min..max] to _Target on …</code> (e.g.
+            <code>[0..1]</code>, <code>[1..*]</code>). It tells the
+            framework/OData the multiplicity (to-one vs to-many) and influences
+            join behavior. Wrong cardinality causes unintended row
+            multiplication.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">12.</span>What is <code>$projection</code>?
+          </div>
+          <div class="a">
+            In a projection/consumption view,
+            <code>$projection</code> references the current view's own elements
+            (e.g. in association ON-conditions or filters), decoupling from the
+            source alias. Used heavily in RAP projection views.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">13.</span>CDS View Entity vs classic DDIC-based CDS
+            view?
+          </div>
+          <div class="a">
+            <code>DEFINE VIEW ENTITY</code> (new) has
+            <b>no separate DDIC SQL view</b>, stricter syntax, better default
+            client/annotation handling, and is SAP's recommendation. The old
+            <code>DEFINE VIEW</code> generates an underlying SQL view. New work
+            should use view entities.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">14.</span><code>CASE</code> expressions in CDS?
+          </div>
+          <div class="a">
+            Simple (<code>CASE field WHEN…</code>) and searched (<code
+              >CASE WHEN cond THEN…</code
+            >) expressions derive columns (e.g. map status to a flag/text),
+            executed in the DB. Keep them readable — deep nesting hurts
+            maintainability.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">15.</span>What is <code>CAST</code> used for?
+          </div>
+          <div class="a">
+            <code>CAST( field AS type )</code> converts data types — e.g. typing
+            an amount to a currency field, aligning types in a UNION, or
+            attaching <code>@Semantics</code>. Use
+            <code>PRESERVING TYPE</code> where needed.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">16.</span>UNION vs UNION ALL?</div>
+          <div class="a">
+            <b>UNION</b> removes duplicate rows (extra cost);
+            <b>UNION ALL</b> keeps all (faster). Field lists must match in
+            number/type/order. Prefer UNION ALL unless de-duplication is truly
+            required.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">17.</span>Aggregations and GROUP BY in CDS?
+          </div>
+          <div class="a">
+            Use <code>SUM/MIN/MAX/AVG/COUNT</code> with <code>GROUP BY</code>;
+            every non-aggregated selected field must be in GROUP BY. For
+            analytics add <code>@DefaultAggregation</code> on measures so
+            consumers re-aggregate dynamically.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">18.</span>Currency/quantity handling and
+            <code>@Semantics</code>?
+          </div>
+          <div class="a">
+            Amounts need
+            <code>@Semantics.amount.currencyCode: 'CurrencyField'</code> and
+            quantities <code>@Semantics.quantity.unitOfMeasure</code> so UIs
+            format correctly; conversion uses
+            <code>currency_conversion( )</code> with a rate date.
+            <div class="tip">
+              <b>Pro-tip:</b> Missing <code>@Semantics</code> on amounts is a
+              classic 'Fiori shows the number wrong / no currency' bug — an easy
+              point to score.
+            </div>
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">19.</span>What are CDS session variables?
+          </div>
+          <div class="a">
+            <code>$session.user</code>, <code>$session.client</code>,
+            <code>$session.system_date</code>,
+            <code>$session.system_language</code> let a view react to runtime
+            context (e.g. filter by current user, use today's date) — pushed
+            down to the DB.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">20.</span>How do you expose language-dependent
+            texts?
+          </div>
+          <div class="a">
+            Via a <b>text association</b>: a text view annotated with
+            <code>@Semantics.text</code>/<code>@ObjectModel.text.element</code>,
+            associated from the master view so UIs show the description in the
+            user's language automatically.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">21.</span>Composition vs Association?
+          </div>
+          <div class="a">
+            A <b>composition</b> is a parent-child association expressing
+            existential dependency (child can't exist without parent) — the
+            backbone of RAP hierarchies (header→item), enabling
+            create-by-association and cascade. A plain <b>association</b> is a
+            non-owning reference.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">22.</span>What is a CDS Table Function?
+          </div>
+          <div class="a">
+            A CDS entity whose implementation is an <b>AMDP</b> method
+            (SQLScript). Use when logic needs procedural steps DDL can't
+            express, while still exposing a CDS-consumable entity. HANA-specific
+            — use sparingly.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">23.</span>What is a Metadata Extension?
+          </div>
+          <div class="a">
+            <code>@Metadata.allowExtensions:true</code> lets you keep
+            UI/annotation logic in a separate <code>.ddlx</code> file with
+            <code>@Metadata.layer</code> (core/partner/customer). Keeps the data
+            model clean, layered and extensible.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">24.</span>How is client handling done in CDS?
+          </div>
+          <div class="a">
+            View entities are client-dependent by default and add the client
+            implicitly (<code>@ClientHandling</code> controls it). You don't
+            select MANDT manually — the framework manages it, unlike classic
+            views.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">25.</span>Deep-dive: how does DCL access control
+            work?
+          </div>
+          <div class="a">
+            A DCL role (<code>define role … grant select on view where …</code>)
+            restricts rows; conditions can inherit from other views (<code
+              >inheriting conditions from entity</code
+            >) and map to PFCG via <code>aspect pfcg_auth</code>. It applies
+            centrally to every consumer (OData, ABAP SQL).
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">26.</span>Does CDS support hierarchies?
+          </div>
+          <div class="a">
+            Yes — define a parent-child hierarchy (<code>hierarchy( … )</code>)
+            over a self-association for tree displays and rollups (e.g. cost
+            centers), consumed by hierarchical Fiori controls/queries.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">27.</span>What is a Consumption view's role?
+          </div>
+          <div class="a">
+            The top VDM layer exposed to a service — stable, annotated for
+            UI/analytics, bound via Service Definition/Binding or
+            <code>@OData.publish</code>. Separating it from interface views
+            shields consumers from model changes.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">28.</span>What does
+            <code>@EndUserText.label</code> do?
+          </div>
+          <div class="a">
+            Supplies field/view labels shown on the UI and in metadata; with
+            element annotations it drives usable OData/Fiori without ABAP. Good
+            labeling is part of a professional, self-documenting deliverable.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">29.</span>How do you extend a view entity for
+            custom fields?
+          </div>
+          <div class="a">
+            <code>EXTEND VIEW ENTITY … WITH …</code> adds fields/associations
+            without modifying the original (needs an extension include on the
+            table for persisted fields). A core Clean-Core extensibility
+            technique.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">30.</span>CDS performance best practices?
+          </div>
+          <div class="a">
+            Push filtering/aggregation to the DB, avoid deep nesting and
+            redundant views, prefer associations over eager JOINs, select only
+            needed fields, put selective conditions in ON/WHERE, and inspect the
+            generated SQL with the trace / CDS analyzer.
+          </div>
+        </div>
+      </section>
+      <section class="sec" id="s3">
+        <h2><span class="n">C</span> Fiori (basics)</h2>
+        <div class="sub">SAP's role-based UX layer on top of OData</div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">1.</span>What is SAP Fiori and its design
+            principles?
+          </div>
+          <div class="a">
+            Fiori is SAP's UX design language and app family. Principles:
+            <b
+              >role-based, adaptive (responsive), coherent, simple,
+              delightful</b
+            >
+            — focusing on the user's actual tasks.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">2.</span>Fiori Elements vs Freestyle SAPUI5?
+          </div>
+          <div class="a">
+            <b>Fiori Elements</b> generate the UI from CDS/OData
+            <b>annotations</b> (little/no JS, consistent, upgrade-friendly).
+            <b>Freestyle</b> is hand-coded SAPUI5 for full control. Rule:
+            Elements first, freestyle only when needed.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">3.</span>Fiori runtime architecture?
+          </div>
+          <div class="a">
+            <b>Launchpad (FLP)</b> hosts tiles → the <b>SAPUI5</b> app runs in
+            the browser → calls an <b>OData</b> service via the
+            <b>Gateway</b> (<code>/IWFND</code>) → reads the backend (CDS/SEGW).
+            Embedded or Front-End-Server deployment.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">4.</span>Catalog, Group, Tile, Target Mapping?
+          </div>
+          <div class="a">
+            <b>Catalog</b> = apps assigned to roles; <b>Group</b> = tile
+            arrangement; <b>Tile</b> = visual entry point;
+            <b>Target Mapping</b> = semantic object + action resolving which app
+            launches. A missing one is the classic 'tile not showing' cause.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">5.</span>OData V2 vs V4 in Fiori?
+          </div>
+          <div class="a">
+            <b>V4</b> is leaner, supports richer analytics and draft, and is
+            required by newer Fiori Elements V4 templates; <b>V2</b> remains
+            widespread. RAP service bindings let you choose either.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">6.</span>Main Fiori Elements floorplans?
+          </div>
+          <div class="a">
+            <b>List Report + Object Page</b>, <b>Analytical List Page (ALP)</b>,
+            <b>Overview Page (OVP)</b>, <b>Worklist</b>. The floorplan is driven
+            by annotations, not code.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">7.</span>Which UI annotations drive Fiori Elements?
+          </div>
+          <div class="a">
+            <code>@UI.lineItem</code> (columns),
+            <code>@UI.selectionField</code> (filters),
+            <code>@UI.identification</code> (object-page fields),
+            <code>@UI.facet</code> (sections), <code>@UI.headerInfo</code>. They
+            live in the CDS/metadata extension layer.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">8.</span>Embedded vs hub (central) deployment?
+          </div>
+          <div class="a">
+            <b>Embedded</b> runs Gateway/FLP on the S/4 system (simpler, fewer
+            hops). <b>Hub/central</b> uses a separate Front-End Server for
+            multiple back-ends (security isolation, multi-system landscapes).
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">9.</span>A Fiori app doesn't show — how do you
+            troubleshoot?
+          </div>
+          <div class="a">
+            Check in order: <b>role/catalog</b> (PFCG),
+            <b>target mapping</b> &amp; semantic object,
+            <b>OData service activation</b> (<code>/IWFND/MAINT_SERVICE</code>),
+            and gateway errors (<code>/IWFND/ERROR_LOG</code>). Usually
+            authorization or an inactive service.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">10.</span>SAPUI5 MVC essentials?</div>
+          <div class="a">
+            <b>Model</b> (OData/JSON), <b>View</b> (XML),
+            <b>Controller</b> (events), tied by <code>Component.js</code> and
+            <code>manifest.json</code>. Reuse via <b>fragments</b>; customize
+            standard apps via <b>extension points</b>, never by modifying SAP
+            code.
+          </div>
+        </div>
+      </section>
+      <section class="sec" id="s4">
+        <h2><span class="n">D</span> ABAP RAP</h2>
+        <div class="sub">
+          ABAP RESTful Application Programming model — the Clean Core dev
+          standard
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">1.</span>What is RAP and how does it relate to
+            BOPF?
+          </div>
+          <div class="a">
+            RAP builds <b>OData services and business objects</b> using CDS + a
+            behavior model. It is the <b>successor to BOPF</b>, cloud-ready and
+            Clean-Core aligned — standard for S/4HANA Cloud and on-prem
+            extensions.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">2.</span>Managed vs unmanaged scenario?
+          </div>
+          <div class="a">
+            In a <b>managed</b> BO the framework handles persistence (CRUD,
+            keys, save). In an <b>unmanaged</b> BO you implement
+            create/update/delete/save yourself — for wrapping legacy
+            tables/logic.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">3.</span>Main building blocks of a RAP BO?
+          </div>
+          <div class="a">
+            A <b>CDS data model</b> (interface + projection view), a
+            <b>Behavior Definition (BDEF)</b>, a
+            <b>Behavior Implementation</b> (handler/saver class), and a
+            <b>Service Definition + Binding</b> exposing OData V2/V4.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">4.</span>What can you declare in a Behavior
+            Definition?
+          </div>
+          <div class="a">
+            Field characteristics (<code>readonly</code>,
+            <code>mandatory</code>), operations (create/update/delete),
+            <b>associations</b>, <b>actions</b>, <b>determinations</b>,
+            <b>validations</b>, locking, authorization and <b>draft</b>.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">5.</span>What is draft handling?</div>
+          <div class="a">
+            Persists an in-progress edit in a <b>draft table</b> so users can
+            leave/resume and stay consistent across devices. Fiori Elements
+            consumes it automatically once the BO is <code>with draft;</code>.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">6.</span>Determination vs Validation?
+          </div>
+          <div class="a">
+            A <b>determination</b> automatically <b>derives/changes data</b> on
+            a trigger (modify/save) — e.g. compute a total. A <b>validation</b>
+            <b>checks consistency</b> and raises messages without changing data
+            — e.g. reject an invalid status.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">7.</span>Types of RAP actions?</div>
+          <div class="a">
+            <b>Instance</b> (on a specific entity), <b>static</b> (on the entity
+            type, no key), <b>factory</b> (create instances). Actions can take
+            parameters and return results, and appear as Fiori buttons.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">8.</span>What is EML?</div>
+          <div class="a">
+            <b>Entity Manipulation Language</b> — ABAP syntax (<code
+              >READ/MODIFY/COMMIT ENTITIES</code
+            >) to read and change RAP BOs directly, e.g. for tests, jobs or
+            BO-to-BO calls.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">9.</span>Managed BO but data must go to legacy
+            tables — options?
+          </div>
+          <div class="a">
+            Use a <b>managed BO with additional save</b> (saver writing to
+            legacy tables), or <b>unmanaged save</b> / unmanaged lock when
+            persistence is fully custom. <b>Late numbering</b> assigns keys at
+            save.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">10.</span>How does RAP support Clean Core /
+            extensibility?
+          </div>
+          <div class="a">
+            Extend the CDS model and BDEF (behavior extension) instead of
+            modifying the BO, and consume only <b>released APIs</b>. Custom
+            logic lives in your package — keeping the core upgrade-safe.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">11.</span>Interface (base) view vs Projection view
+            — why two?
+          </div>
+          <div class="a">
+            The <b>interface view</b> models the data and defines
+            compositions/associations (stable, reusable). The
+            <b>projection view</b> exposes a tailored subset (with
+            <code>@UI</code>, <code>$projection</code>) to a specific service,
+            so several services project the same BO differently.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">12.</span>Behavior Definition vs Behavior
+            Projection?
+          </div>
+          <div class="a">
+            The <b>BDEF</b> defines the full behavior on the interface view. The
+            <b>behavior projection</b> (<code>projection; use action…</code>)
+            selectively exposes that behavior for a service — you can't add new
+            logic in the projection, only expose it.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">13.</span>Static vs dynamic feature control?
+          </div>
+          <div class="a">
+            Feature control enables/disables operations/actions/fields.
+            <b>Static</b> is fixed in the BDEF; <b>dynamic</b> is computed at
+            runtime in <code>get_instance_features</code> /
+            <code>get_global_features</code> (e.g. disable 'Approve' unless
+            status = submitted). Dynamic needs the
+            <code>features : instance</code> annotation.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">14.</span>How does field control work?
+          </div>
+          <div class="a">
+            Sets readonly/mandatory. <b>Static</b> field control is declared in
+            BDEF (<code>field (mandatory, readonly)</code>); <b>dynamic</b> is
+            evaluated in <code>get_instance_features</code> returning
+            <code>%control</code> per field — e.g. mandatory only for a certain
+            category.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">15.</span>How is authorization implemented in RAP?
+          </div>
+          <div class="a">
+            <b>Global authorization</b> (<code>get_global_authorizations</code>)
+            gates whole operations (e.g. create);
+            <b>instance authorization</b>
+            (<code>get_instance_authorizations</code>) gates per-record
+            actions/update/delete based on the data. Combine both for full
+            coverage.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">16.</span>Early vs late numbering?
+          </div>
+          <div class="a">
+            <b>Early</b> assigns the key during CREATE. <b>Late</b> assigns keys
+            only at save (<code>adjust_numbers</code>), typically from a number
+            range at commit to avoid gaps/collisions — needs the
+            <code>late numbering</code> addition in BDEF.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">17.</span>Draft-specific actions and
+            <code>%is_draft</code>?
+          </div>
+          <div class="a">
+            Draft BOs get standard
+            <b>Edit, Activate, Discard, Resume, Prepare</b> actions.
+            <code>%is_draft</code> distinguishes draft vs active instances in
+            EML/logic; draft-time checks bind to the
+            <code>Prepare</code> determine action.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">18.</span>What are Side Effects
+            (<code>@Sideeffects</code>)?
+          </div>
+          <div class="a">
+            Declared in the projection to tell Fiori which fields/entities to
+            reload after a change/action (e.g. changing quantity recalculates
+            total) — no full refresh, better UX and fewer round-trips.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">19.</span>What is create-by-association?
+          </div>
+          <div class="a">
+            With a <b>composition</b>, you create children through the parent
+            (<code>CREATE BY \_Assoc</code> in EML or 'Create' on a sub-object
+            page) and the framework links them by parent key. Only compositions
+            (ownership) support it.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">20.</span>EML result structures —
+            <code>mapped</code>, <code>failed</code>, <code>reported</code>?
+          </div>
+          <div class="a">
+            <b>failed</b> = keys that failed with a cause; <b>reported</b> =
+            messages per key; <b>mapped</b> = mapping of <code>%cid</code> to
+            assigned keys on create. Always check <code>failed</code> before
+            <code>COMMIT ENTITIES</code>; use <code>reported</code> to surface
+            messages.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">21.</span>How does RAP do concurrency control?
+          </div>
+          <div class="a">
+            Optimistic locking via an <b>ETag</b> field (e.g. last-changed
+            timestamp) declared in BDEF (<code>etag master LastChangedAt</code
+            >). The framework rejects an update if the ETag changed since read,
+            preventing lost updates.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">22.</span>What are virtual elements?
+          </div>
+          <div class="a">
+            CDS fields not persisted, calculated at runtime via ABAP (<code
+              >@ObjectModel.virtualElement</code
+            >
+            + a calculation class). Use for values needing complex ABAP logic
+            that still must appear in the service — mind performance (avoid
+            sorting/filtering on them).
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">23.</span>What is a RAP custom query?
+          </div>
+          <div class="a">
+            For unmanaged/analytical reads you implement a query class
+            (<code>IF_RAP_QUERY_PROVIDER</code>) that fills results from the
+            request (filters, paging, sorting) — e.g. reading a remote system or
+            custom logic instead of a CDS-backed table.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">24.</span>Business events in RAP?
+          </div>
+          <div class="a">
+            A BO can <b>raise business events</b> (<code
+              >raise entity event</code
+            >
+            in BDEF + EML) published via Event Mesh for loosely-coupled,
+            event-driven integration (e.g. 'PermitApproved') — aligns with
+            side-by-side / Clean Core.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">25.</span>What is strict mode
+            (<code>strict(2)</code>)?
+          </div>
+          <div class="a">
+            Activates the latest syntax checks and best-practice rules
+            (mandatory implementations, correct action/feature definitions),
+            ensuring the BO is cloud-/upgrade-ready. New BOs should always be
+            <code>strict(2)</code>.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">26.</span>What is a precheck?</div>
+          <div class="a">
+            A precheck validates a modification <b>before</b> the framework
+            writes it to the buffer (ahead of determinations/validations),
+            rejecting invalid changes early — e.g. block a value that must never
+            enter the transactional buffer.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">27.</span>Explain the RAP save sequence /
+            additional save.
+          </div>
+          <div class="a">
+            Phases: <b>finalize → check_before_save → adjust_numbers</b> (late
+            numbering) <b>→ save → cleanup</b>. <b>Additional save</b> (saver)
+            writes to extra/legacy tables alongside managed persistence;
+            <code>save_modified</code> exposes the changed instances.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">28.</span>Managed vs unmanaged lock?
+          </div>
+          <div class="a">
+            <b>Managed lock</b> is handled by the framework using the root key.
+            <b>Unmanaged lock</b> (<code>lock master unmanaged</code>) means you
+            implement the lock yourself (e.g. reuse an existing enqueue) — for
+            legacy-wrapping scenarios.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">29.</span>How should one RAP BO call another?
+          </div>
+          <div class="a">
+            Via <b>EML</b> (<code>MODIFY/READ ENTITIES</code>) rather than
+            writing the other BO's tables directly — keeping business logic
+            encapsulated in the owning BO, ensuring consistency and reuse. Use
+            <code>IN LOCAL MODE</code> to bypass the target's auth/feature
+            checks when appropriate.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">30.</span>How do you test a RAP BO?
+          </div>
+          <div class="a">
+            With <b>ABAP Unit</b> driving the BO through <b>EML</b>, plus the
+            <b>RAP BO test double</b> framework
+            (<code>cl_abap_behv_test_environment</code>) to isolate persistence
+            and dependencies — so tests run without touching real tables.
+          </div>
+        </div>
+      </section>
+      <section class="sec" id="s5">
+        <h2><span class="n">E</span> CPI — Cloud Integration</h2>
+        <div class="sub">
+          SAP Integration Suite's iPaaS for cloud & hybrid integration
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">1.</span>What is CPI / Cloud Integration?
+          </div>
+          <div class="a">
+            The cloud integration capability of <b>SAP Integration Suite</b> on
+            BTP — a managed iPaaS with prebuilt content, the strategic successor
+            to PI/PO for cloud/hybrid landscapes.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">2.</span>What is an iFlow?</div>
+          <div class="a">
+            An <b>Integration Flow</b> — a BPMN-style model going
+            <b>sender → steps → receiver</b>, defining adapters, mappings,
+            routing and error handling, designed in the Integration Suite web
+            tooling.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">3.</span>Common CPI adapters?</div>
+          <div class="a">
+            <b
+              >HTTPS, SOAP, OData, IDoc, SFTP/FTP, JMS, AMQP, Mail,
+              SuccessFactors</b
+            >, and <b>ProcessDirect</b> for internal iFlow-to-iFlow calls.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">4.</span>Content Modifier, Message Mapping, Groovy
+            script?
+          </div>
+          <div class="a">
+            <b>Content Modifier</b> sets headers/properties/body;
+            <b>Message Mapping</b> transforms structures graphically;
+            <b>Groovy/JS</b> handles logic the standard steps can't —
+            reading/writing headers, properties and payload.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">5.</span>Splitter, Gather, Aggregator?
+          </div>
+          <div class="a">
+            <b>Splitter</b> breaks a bulk message into parts
+            (general/iterating), <b>Gather/Join</b> recombines branches,
+            <b>Aggregator</b> collects related messages over time into one —
+            essential for batch and B2B.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">6.</span>How do you handle errors in an iFlow?
+          </div>
+          <div class="a">
+            Add an <b>Exception Subprocess</b>, set a meaningful error
+            payload/status, use <b>retry</b> (JMS with dead-letter), and raise
+            alerts. Design idempotency so retries don't double-post.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">7.</span>How is security/credentials managed?
+          </div>
+          <div class="a">
+            Through <b>Security Material</b> — OAuth2 client credentials, user
+            credentials, and <b>client certificates / keystores</b>. Sensitive
+            values are secure parameters, never hard-coded.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">8.</span>Request-Reply vs Content Enricher vs Poll
+            Enrich?
+          </div>
+          <div class="a">
+            <b>Request-Reply</b>: synchronous call, continue with response.
+            <b>Content Enricher</b>: merge an external lookup into the message.
+            <b>Poll Enrich</b>: fetch from a source (e.g. SFTP) at a point in
+            the flow.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">9.</span>Value Mapping vs Message Mapping?
+          </div>
+          <div class="a">
+            <b>Message Mapping</b> transforms <b>structure</b>.
+            <b>Value Mapping</b> converts <b>code values</b> between systems
+            (e.g. country codes) via a maintained table — reusable across
+            iFlows.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">10.</span>How do you monitor CPI, and how does it
+            differ from PI/PO?
+          </div>
+          <div class="a">
+            Via the <b>Message Processing Log (MPL)</b> and trace-level logging.
+            Unlike PI/PO (on-prem, often dual-stack, self-managed), CPI is a
+            <b>cloud, SAP-managed</b> service with prebuilt content and simpler
+            scaling.
+            <div class="tip">
+              <b>Pro-tip:</b> Frequent gotcha: a custom header silently dropped
+              until <code>Allowed Headers = *</code> is set on the sender
+              adapter — mentioning such debugging signals hands-on experience.
+            </div>
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">11.</span>Headers vs Exchange Properties?
+          </div>
+          <div class="a">
+            CPI runs on Apache Camel. <b>Headers</b> travel with the message and
+            may be sent to the receiver; <b>Exchange Properties</b> live only
+            inside the iFlow runtime (not sent out). Use properties for internal
+            state, headers when the value must reach the receiver.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">12.</span>What is the ProcessDirect adapter for?
+          </div>
+          <div class="a">
+            An in-tenant adapter that calls another iFlow directly (no network
+            hop), letting you split large integrations into reusable,
+            independently deployable flows (e.g. a shared error-handling or
+            mapping flow). Improves modularity.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">13.</span>Why use JMS queues?</div>
+          <div class="a">
+            Asynchronous, transactional in-tenant queues that decouple
+            sender/receiver, enable <b>retry</b> and store-and-forward, and
+            provide <b>dead-letter</b> handling for persistently failing
+            messages. Key for reliability and load leveling; consumes tenant
+            queue resources.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">14.</span>What are externalized parameters?
+          </div>
+          <div class="a">
+            Config values (URLs, credential names, paths) marked externalized so
+            they're set <b>per environment</b> (DEV/QA/PRD) at configuration
+            time without editing the iFlow — supporting clean transports.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">15.</span>Data Store vs Variables?
+          </div>
+          <div class="a">
+            <b>Data Store</b> persists messages/payloads
+            (write/get/select/delete) for later processing or de-duplication;
+            <b>Variables</b> (global/local) persist small values (e.g. last-run
+            timestamp) across executions — used for delta polling and stateful
+            patterns.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">16.</span>Router vs Filter?</div>
+          <div class="a">
+            A <b>Router</b> does content-based routing — evaluates conditions
+            (XPath) and sends the message down the matching branch (with a
+            default). A <b>Filter</b> extracts a portion of the payload,
+            discarding the rest. Router = choose path; Filter = trim content.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">17.</span>Encryption/signing and OAuth inbound vs
+            outbound?
+          </div>
+          <div class="a">
+            CPI supports <b>PGP</b> encryption/decryption and digital
+            signing/verification for B2B, plus TLS. <b>OAuth</b> is used
+            <b>inbound</b> (protecting the iFlow endpoint) and
+            <b>outbound</b> (obtaining tokens to call receivers) — configured
+            via Security Material.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">18.</span>B2B / Partner Directory and EDI?
+          </div>
+          <div class="a">
+            The Integration Suite <b>B2B</b> capability manages trading partners
+            via the <b>Partner Directory</b> and processes
+            <b>EDIFACT / ANSI X12</b> over AS2/SFTP, mapping to/from XML — for
+            supplier/customer electronic document exchange.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">19.</span>API Management vs Cloud Integration?
+          </div>
+          <div class="a">
+            <b>Cloud Integration (CPI)</b> does message mediation/transformation
+            (iFlows). <b>API Management</b> publishes, secures, rate-limits and
+            monetizes APIs (proxies, policies, developer portal). Complementary
+            capabilities within Integration Suite.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">20.</span>How do you transport iFlows across
+            tenants?
+          </div>
+          <div class="a">
+            Via <b>CTS+</b>, the <b>Transport Management Service (TMS)</b> on
+            BTP, or manual <b>MTAR/package</b> export-import. Externalized
+            parameters keep environment-specific values out of the transported
+            artifact.
+          </div>
+        </div>
+      </section>
+      <section class="sec" id="s6">
+        <h2><span class="n">F</span> SAP BTP</h2>
+        <div class="sub">
+          Business Technology Platform — extend, integrate, innovate
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">1.</span>What is SAP BTP?</div>
+          <div class="a">
+            The <b>Business Technology Platform</b> — SAP's PaaS uniting
+            <b
+              >app development, integration, data &amp; analytics, AI and
+              automation</b
+            >. Where you build side-by-side extensions and integrations around
+            the digital core.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">2.</span>Which runtime environments does BTP offer?
+          </div>
+          <div class="a">
+            <b>Cloud Foundry</b> (polyglot apps), <b>Kyma</b> (managed
+            Kubernetes), the <b>ABAP environment (Steampunk)</b>, and legacy
+            <b>Neo</b> (deprecated). Choose by skillset/workload.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">3.</span>In-app vs side-by-side extensibility?
+          </div>
+          <div class="a">
+            <b>In-app</b> extensions live inside S/4 (key-user, developer
+            extensibility). <b>Side-by-side</b> apps run on BTP calling S/4 via
+            released APIs — preferred for larger, decoupled custom apps and
+            Clean Core.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">4.</span>Explain the BTP account model.
+          </div>
+          <div class="a">
+            A <b>Global Account</b> holds entitlements; it contains
+            <b>Subaccounts</b> (per region/project/stage); in Cloud Foundry a
+            subaccount has <b>Spaces</b>. Entitlements/quotas allocate services.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">5.</span>How does BTP connect securely to on-prem
+            S/4?
+          </div>
+          <div class="a">
+            The <b>Cloud Connector</b> establishes a secure reverse tunnel
+            on-prem↔subaccount; the <b>Connectivity</b> and
+            <b>Destination</b> services define the target system and its
+            authentication.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">6.</span>How is authentication/authorization
+            handled?
+          </div>
+          <div class="a">
+            <b>XSUAA</b> (OAuth2, issues JWTs) with app roles grouped into
+            <b>role collections</b>, backed by an IdP (<b>IAS/IPS</b> or
+            corporate). Apps validate the token and check scopes.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">7.</span>What is the ABAP Environment (Steampunk)?
+          </div>
+          <div class="a">
+            ABAP-as-a-service on BTP for <b>side-by-side ABAP</b> apps using RAP
+            and released APIs. <b>Embedded Steampunk</b> brings the same
+            restricted, cloud-ready ABAP model inside S/4HANA Cloud.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">8.</span>What is CAP?</div>
+          <div class="a">
+            The <b>Cloud Application Programming model</b> — an opinionated
+            framework (Node.js/Java) built on <b>CDS</b> for rapidly building
+            services and OData APIs on BTP, with built-in persistence, auth and
+            best practices.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">9.</span>Which BTP services matter for an
+            integration/extension consultant?
+          </div>
+          <div class="a">
+            <b>Integration Suite (CPI)</b>, <b>Build Apps / Work Zone</b>,
+            <b>Workflow &amp; Process Automation</b>, <b>Event Mesh</b>,
+            <b>Destination/Connectivity</b>, <b>HANA Cloud</b> — mixed to
+            deliver side-by-side scenarios.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">10.</span>What is the Clean Core strategy and BTP's
+            role?
+          </div>
+          <div class="a">
+            Keep the S/4 core standard — no modifications, only released
+            extension points/APIs — and move substantial custom logic to
+            <b>BTP side-by-side</b>. Makes upgrades faster, cheaper and
+            lower-risk; a top talking point on modern S/4 projects.
+          </div>
+        </div>
+      </section>
+      <section class="sec" id="s7">
+        <h2><span class="n">G</span> PI / PO</h2>
+        <div class="sub">
+          Process Integration / Orchestration — the on-premise ESB
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">1.</span>What is SAP PI/PO?</div>
+          <div class="a">
+            SAP <b>Process Integration / Orchestration</b> — on-premise
+            middleware/ESB for A2A and B2B integration, mediating, routing and
+            transforming messages between SAP and non-SAP systems.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">2.</span>Describe the PI/PO architecture.
+          </div>
+          <div class="a">
+            Design in the <b>ESR</b>, configuration in the
+            <b>Integration Directory (ID)</b>, runtime in the
+            <b>Integration/Adapter Engine (AEX)</b>; the <b>SLD</b> holds the
+            landscape and the <b>RWB</b> is used for monitoring.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">3.</span>Key ESR (design-time) objects?
+          </div>
+          <div class="a">
+            <b>Data Types, Message Types, Service Interfaces</b> (in/out), and
+            <b>Message &amp; Operation Mappings</b> — the message contracts and
+            transformations, independent of any system.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">4.</span>Key Integration Directory (config-time)
+            objects?
+          </div>
+          <div class="a">
+            <b>Communication Channels</b>, <b>sender/receiver agreements</b>,
+            <b>receiver &amp; interface determination</b> — or, on single stack,
+            the consolidated <b>Integrated Configuration (ICO)</b>. They bind
+            design objects to concrete systems.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">5.</span>Dual stack vs single stack?
+          </div>
+          <div class="a">
+            <b>Dual stack</b> (classic PI) ran ABAP + Java.
+            <b>Single stack</b> (AEX — Java only, 'PO') is leaner, easier to
+            maintain and SAP's recommendation; it uses the Integrated
+            Configuration.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">6.</span>Which mapping types are available?
+          </div>
+          <div class="a">
+            <b>Graphical (message) mapping</b>, <b>XSLT</b>, <b>Java</b>,
+            <b>ABAP</b> mapping. Graphical covers most cases; XSLT/Java for
+            complex transformations, chainable in an operation mapping.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">7.</span>When do you use ccBPM/BPM?
+          </div>
+          <div class="a">
+            For <b>stateful, multi-message orchestration</b> —
+            collecting/correlating messages, wait steps, splits/merges. It adds
+            overhead, so use only when stateless routing can't express the
+            process.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q"><span class="qn">8.</span>Common PI/PO adapters?</div>
+          <div class="a">
+            <b>IDoc, File/FTP/SFTP, SOAP, REST, JDBC, RFC, Proxy, Mail</b>. The
+            adapter converts between the external protocol and PI's internal XML
+            message.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">9.</span>Proxy vs adapter-based communication?
+          </div>
+          <div class="a">
+            <b>Proxy</b> (ABAP/Java) generates message interfaces in the
+            application system and uses the native XI protocol — efficient, no
+            adapter. <b>Adapter-based</b> communication converts external
+            formats at the Adapter Engine.
+          </div>
+        </div>
+        <div class="qa">
+          <div class="q">
+            <span class="qn">10.</span>How do you monitor PI/PO, and what's the
+            path to CPI?
+          </div>
+          <div class="a">
+            Use <b>message monitoring</b>, <b>channel monitoring</b> and the RWB
+            / component monitoring to trace/reprocess. SAP positions
+            <b>Integration Suite (CPI)</b> as the successor, with a
+            <b>migration assessment/tooling</b> to move iFlows to the cloud.
+          </div>
+        </div>
+      </section>
+      <footer>
+        160 questions · ABAP/RICEFW · CDS · Fiori · RAP · CPI · BTP · PI/PO<br />Tip:
+        turn on Quiz mode, cover the answers, and rehearse out loud. Good luck!
+        🚀
+      </footer>
+    </div>
+    <script>
+      var quizOn = false;
+      var btn = document.getElementById("quizBtn");
+      btn.addEventListener("click", function () {
+        quizOn = !quizOn;
+        document.body.classList.toggle("quiz", quizOn);
+        btn.textContent = quizOn ? "🎯 Quiz mode: ON" : "🎯 Quiz mode: OFF";
+        if (!quizOn) {
+          document.querySelectorAll(".qa.revealed").forEach(function (e) {
+            e.classList.remove("revealed");
+          });
+        }
+      });
+      document.querySelectorAll(".qa .q").forEach(function (q) {
+        q.addEventListener("click", function () {
+          if (quizOn) {
+            q.parentElement.classList.toggle("revealed");
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

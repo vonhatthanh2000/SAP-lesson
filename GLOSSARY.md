@@ -27,3 +27,17 @@ _Avoid_: Database cache, draft table
 **Business invariant**:
 A rule that must remain true regardless of whether the business object is invoked through Fiori elements, OData, EML, a test, or another consumer.
 _Avoid_: UI rule, button rule
+
+## Data model and ownership
+
+**Aggregate root**:
+The top entity that owns a business object's transactional boundary, lifecycle, and aggregate-wide consistency. In this workspace, `SalesOrderRequest` is the aggregate root.
+_Avoid_: Header table, main table
+
+**Composition**:
+An owning parent–child relationship in which the child participates in the parent's lifecycle and cannot meaningfully belong to the business object without that parent.
+_Avoid_: One-to-many association, table relationship
+
+**Association**:
+A non-owning relationship to an entity with an independent lifecycle, such as Customer or Product master data referenced by a Sales Order Request.
+_Avoid_: Foreign key relationship, composition reference

@@ -11,7 +11,7 @@ This workspace is a one-month, evidence-driven path toward SAP RAP interview rea
 5. Draw the request flow from memory and answer the lesson's five retrieval questions before reading further.
 6. Review the complete [one-month roadmap](./ROADMAP.md), then schedule only Week 1 on your calendar.
 
-Current lesson: [Lesson 2 — Model the Sales Order Aggregate](./lessons/0002-model-the-sales-order-aggregate.html).
+Current lesson: [Lesson 3 — Separate the BO Model from Its Consumer Projection](./lessons/0003-separate-bo-model-from-consumer-projection.html).
 
 ## Course documents
 
@@ -21,6 +21,8 @@ Current lesson: [Lesson 2 — Model the Sales Order Aggregate](./lessons/0002-mo
 - [RAP runtime map](./reference/rap-runtime-map.html) — printable architecture and responsibility reference.
 - [Lesson 1 code trail](./reference/lesson-1-code-trail.html) — exact first-party SAP sample files for every Lesson 1 notion.
 - [OpenSAP Travel sample analysis](./reference/opensap-travel-sample.html) — concrete end-to-end code trace and Sales Order transfer map, with historical-version warnings.
+- [Interview-readiness map](./reference/interview-readiness-map.html) — maps the 160-question bank to lessons, milestones, and explicit scope boundaries.
+- [SAP Technical Consultant interview bank](./reference/SAP_TechConsultant_Interview_160Q.html) — practice prompts and draft answers; verify technical claims against the primary sources above.
 - [Glossary](./GLOSSARY.md) — terminology demonstrated and established during retrieval checks.
 - [Primary-source research](./research/sap-rap-primary-sources.md) — detailed evidence, environment boundaries, and source map.
 

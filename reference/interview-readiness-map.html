@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SAP RAP Interview-Readiness Map</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Reference · 160-question coverage ledger</div>
+        <h1>Turn interview prompts into project evidence</h1>
+        <p class="lede">
+          The question bank is useful for retrieval, but its supplied answers
+          are not primary sources. This map selects the prompts that serve the
+          RAP mission, assigns them to learning milestones, and makes deferred
+          scope explicit.
+        </p>
+      </header>
+
+      <section>
+        <h2>How to earn “ready”</h2>
+        <div class="flow">
+          <span>Retrieve</span><i>→</i><span>Explain runtime</span><i>→</i
+          ><span>Defend a choice</span><i>→</i><span>Show evidence</span>
+        </div>
+        <ol>
+          <li>Answer without opening the bank for 60–90 seconds.</li>
+          <li>State the concept and the runtime consequence.</li>
+          <li>Connect it to a decision in the Sales Order project.</li>
+          <li>Point to code, a test, a trace, or a diagram.</li>
+          <li>Repeat successfully on a later day before marking it ready.</li>
+        </ol>
+        <p>
+          Use the
+          <a href="./SAP_TechConsultant_Interview_160Q.html"
+            >complete interview bank</a
+          > for prompts. Correct answers against SAP Help and commit-pinned
+          <code>SAP-samples</code> artifacts linked by each lesson.
+        </p>
+      </section>
+
+      <section>
+        <h2>Mission-aligned core</h2>
+        <table>
+          <thead>
+            <tr><th>Area</th><th>Core prompts</th><th>Why they are core</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>ABAP RAP</td>
+              <td>D1–D30</td>
+              <td>The flagship project's architecture, behavior, runtime, security, and tests must provide direct evidence.</td>
+            </tr>
+            <tr>
+              <td>CDS</td>
+              <td>B1–B4, B6, B9, B11–B13, B18, B20–B21, B23–B25, B27–B30</td>
+              <td>These define the transactional data model, semantics, consumer contract, access control, and operational quality.</td>
+            </tr>
+            <tr>
+              <td>Fiori</td>
+              <td>C1–C3, C5–C7, C9</td>
+              <td>These explain the metadata-driven client and how to trace or diagnose the service-facing slice.</td>
+            </tr>
+            <tr>
+              <td>ABAP foundations</td>
+              <td>A5, A21–A25, A29–A31, A37, A44, A46, A49</td>
+              <td>Performance, LUWs, locking, authorization, numbering, debugging, and tests support credible runtime explanations.</td>
+            </tr>
+            <tr>
+              <td>BTP</td>
+              <td>F3, F7, F10</td>
+              <td>These establish the ABAP Environment and clean-core extension boundary used by the project.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Where the course answers them</h2>
+        <table>
+          <thead>
+            <tr><th>Milestone</th><th>Interview targets</th><th>Required evidence</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="../lessons/0001-trace-a-rap-request.html">Lesson 1</a></td>
+              <td>D1, D3, D8, D20, D27, D29; B6; C3, C5</td>
+              <td>Request-flow diagram and a trace from consumer to save boundary.</td>
+            </tr>
+            <tr>
+              <td><a href="../lessons/0002-model-the-sales-order-aggregate.html">Lesson 2</a></td>
+              <td>B11, B21; D19, D21, D28</td>
+              <td>Root/child diagram, ownership defense, and cross-entity invariants.</td>
+            </tr>
+            <tr>
+              <td><a href="../lessons/0003-separate-bo-model-from-consumer-projection.html">Lesson 3</a></td>
+              <td>B1–B4, B11–B13, B18, B21, B27; D3, D11–D12</td>
+              <td>Two interface entities, two projections, semantic annotations, and a boundary-change explanation.</td>
+            </tr>
+            <tr>
+              <td>Week 1 service/UI slice</td>
+              <td>B3, B6, B20, B23, B28; C1–C7, C9</td>
+              <td>OData V4 preview, metadata extension, and failed-app diagnostic trace.</td>
+            </tr>
+            <tr>
+              <td>Week 2 transactional BO</td>
+              <td>D2, D4–D7, D9, D13–D19, D21, D25–D28</td>
+              <td>Managed BDEF, draft/concurrency demo, rules, actions, and failure tests.</td>
+            </tr>
+            <tr>
+              <td>Week 3 production shape</td>
+              <td>B9, B25; D8, D10, D15, D20, D24, D29–D30; A37, A49; F3, F7, F10</td>
+              <td>EML tests, authorization denial, adapter boundary, and clean-core ADR.</td>
+            </tr>
+            <tr>
+              <td>Week 4 synthesis</td>
+              <td>All mission-aligned core prompts</td>
+              <td>Two spaced answers per prompt plus portfolio evidence and honest limitations.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Supporting and deferred scope</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Supporting drills</h3>
+            <p>
+              The remaining CDS, Fiori, and BTP questions are useful breadth
+              drills after the core portfolio works. They should not displace
+              transactional RAP practice.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Separate expansion tracks</h3>
+            <p>
+              Most classic RICEFW (A), all CPI (E), and all PI/PO (G) require
+              different systems, artifacts, and evidence. Covering them deeply
+              would broaden the current mission and needs explicit agreement.
+            </p>
+          </article>
+        </div>
+        <div class="callout">
+          <p>
+            An interview-ready answer includes an honest boundary: “I can
+            explain the concept, but my demonstrated implementation evidence is
+            RAP rather than CPI/PI/PO.” Do not claim hands-on depth from a
+            memorized paragraph.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          Ask your teaching agent for a timed interview drill only after the
+          matching lesson's pass condition is met.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 3 — Separate the BO Model from Its Consumer Projection</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 3 · 40 minutes · CDS contracts</div>
+        <h1>Separate the BO model from its consumer projection</h1>
+        <p class="lede">
+          Translate the aggregate you designed into CDS view entities, then
+          expose a consumer-specific shape without duplicating or weakening the
+          business-object boundary.
+        </p>
+      </header>
+
+      <section>
+        <h2>The tangible win</h2>
+        <div class="callout success">
+          <p>
+            Produce four connected CDS skeletons—root interface, child
+            interface, root projection, and child projection—and explain which
+            contract changes when the UI needs a different shape.
+          </p>
+        </div>
+        <p>
+          This turns your Lesson 2 diagram into portfolio evidence for interview
+          questions about CDS view entities, semantics, interface views, and
+          projections.
+        </p>
+      </section>
+
+      <section>
+        <h2>Retrieve before reading</h2>
+        <p>Answer in one sentence each:</p>
+        <ul class="checklist">
+          <li>Why is <code>Item</code> not a second root?</li>
+          <li>Which relationships are compositions and which are associations?</li>
+          <li>Which amounts are entered and which are derived?</li>
+        </ul>
+        <p>
+          If any answer is uncertain, revisit
+          <a href="./0002-model-the-sales-order-aggregate.html">Lesson 2</a>
+          before adding syntax.
+        </p>
+      </section>
+
+      <section>
+        <h2>Two contracts, one topology</h2>
+        <table>
+          <thead>
+            <tr><th>Contract</th><th>Owns</th><th>Must not own</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Interface CDS model</td>
+              <td>Keys, fields, semantic relationships, composition topology, and reusable associations.</td>
+              <td>A single UI's layout or accidental public surface.</td>
+            </tr>
+            <tr>
+              <td>Projection CDS model</td>
+              <td>A consumer-specific subset, aliases, value-help/text enrichment, and redirected projected navigation.</td>
+              <td>Persistence ownership or business invariants.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          A projection is not a copied data model. It is a controlled view of
+          the base model. If the aggregate boundary is wrong, another projection
+          cannot repair it.
+        </p>
+      </section>
+
+      <section>
+        <h2>Read the SAP sample in pairs</h2>
+        <p>
+          In SAP's RAP110 sample, compare the
+          <a href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_traveltp_sol.ddls.asddls#L4-L47"
+            >Travel root interface entity</a
+          > with the
+          <a href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_r_bookingtp_sol.ddls.asddls#L4-L39"
+            >Booking child interface entity</a
+          >. Then inspect the
+          <a href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_c_traveltp_sol.ddls.asddls#L6-L81"
+            >root projection and redirected composition</a
+          >.
+        </p>
+        <p>
+          SAP Help gives the current contracts and syntax in
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/creating-cds-view-entities"
+            >Creating CDS View Entities</a
+          > and
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/projecting-data-model-in-cds-projection-views"
+            >Projecting the Data Model in CDS Projection Views</a
+          >.
+        </p>
+      </section>
+
+      <section>
+        <h2>Interface entities: express ownership and semantics</h2>
+        <p>
+          Use these as design skeletons. Replace table and reference-entity
+          names with artifacts available in your system.
+        </p>
+        <pre><code>define root view entity ZR_SalesOrderRequest
+  as select from zsor_request as Request
+  composition [0..*] of ZR_SalesOrderItem as _Item
+  association [0..1] to ZI_CustomerReference as _Customer
+    on $projection.SoldToParty = _Customer.CustomerID
+{
+  key Request.request_uuid         as RequestUUID,
+      Request.sold_to_party        as SoldToParty,
+      Request.status               as Status,
+
+      @Semantics.amount.currencyCode: 'TransactionCurrency'
+      Request.total_amount         as TotalAmount,
+      Request.transaction_currency as TransactionCurrency,
+
+      _Item,
+      _Customer
+}</code></pre>
+
+        <pre><code>define view entity ZR_SalesOrderItem
+  as select from zsor_item as Item
+  association to parent ZR_SalesOrderRequest as _SalesOrderRequest
+    on $projection.RequestUUID = _SalesOrderRequest.RequestUUID
+  association [0..1] to ZI_ProductReference as _Product
+    on $projection.Product = _Product.ProductID
+{
+  key Item.item_uuid            as ItemUUID,
+      Item.request_uuid         as RequestUUID,
+      Item.product              as Product,
+
+      @Semantics.quantity.unitOfMeasure: 'QuantityUnit'
+      Item.requested_quantity   as RequestedQuantity,
+      Item.quantity_unit        as QuantityUnit,
+
+      @Semantics.amount.currencyCode: 'TransactionCurrency'
+      Item.unit_price           as UnitPrice,
+      @Semantics.amount.currencyCode: 'TransactionCurrency'
+      Item.net_amount           as NetAmount,
+      Item.transaction_currency as TransactionCurrency,
+
+      _SalesOrderRequest,
+      _Product
+}</code></pre>
+        <p>
+          The annotations link an amount to its currency and a quantity to its
+          unit; they do not calculate values. SAP's
+          <a href="https://help.sap.com/docs/abap-cloud/abap-data-models/handling-amounts-and-quantities-in-abap-cds"
+            >amount and quantity guidance</a
+          > defines these semantic contracts.
+        </p>
+        <div class="callout">
+          <p>
+            Activation can expose the circular-looking topology: the child
+            needs an association to its parent, and the root then composes the
+            child. Follow your ADT release's activation workflow rather than
+            deleting one side of the final model.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Projection entities: preserve navigation, narrow exposure</h2>
+        <pre><code>@Metadata.allowExtensions: true
+define root view entity ZC_SalesOrderRequest
+  provider contract transactional_query
+  as projection on ZR_SalesOrderRequest
+{
+  key RequestUUID,
+      SoldToParty,
+      Status,
+      TotalAmount,
+      TransactionCurrency,
+      _Item : redirected to composition child ZC_SalesOrderItem,
+      _Customer
+}</code></pre>
+
+        <pre><code>define view entity ZC_SalesOrderItem
+  provider contract transactional_query
+  as projection on ZR_SalesOrderItem
+{
+  key ItemUUID,
+      RequestUUID,
+      Product,
+      RequestedQuantity,
+      QuantityUnit,
+      UnitPrice,
+      NetAmount,
+      TransactionCurrency,
+      _SalesOrderRequest : redirected to parent ZC_SalesOrderRequest,
+      _Product
+}</code></pre>
+        <p>
+          Redirection keeps navigation inside the projected graph: projected
+          orders navigate to projected items, and projected items navigate back
+          to the projected parent. The base entities remain the reusable BO
+          model.
+        </p>
+      </section>
+
+      <section>
+        <h2>Boundary decisions</h2>
+        <table>
+          <thead><tr><th>Change request</th><th>Primary place</th><th>Reason</th></tr></thead>
+          <tbody>
+            <tr><td>Add a field required by every BO consumer</td><td>Interface model</td><td>It belongs to the reusable semantic contract.</td></tr>
+            <tr><td>Hide an audit field from this UI service</td><td>Projection</td><td>The BO retains it; this consumer does not expose it.</td></tr>
+            <tr><td>Change Item lifecycle ownership</td><td>Interface composition</td><td>Ownership is a BO decision, not presentation.</td></tr>
+            <tr><td>Add a Fiori section or column</td><td>Metadata extension</td><td>That is presentation metadata, covered in a later lesson.</td></tr>
+            <tr><td>Prevent direct edits to TotalAmount</td><td>Base behavior definition</td><td><code>readonly</code> is transactional behavior, not a CDS calculation.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Your build task</h2>
+        <ol>
+          <li>Rewrite the two interface skeletons using your chosen object names.</li>
+          <li>Expose only the fields needed by the first Sales Order UI.</li>
+          <li>Redirect the root composition and child parent association.</li>
+          <li>Annotate every amount/currency and quantity/unit pair.</li>
+          <li>Name one internal field deliberately excluded from the projection.</li>
+        </ol>
+        <p>
+          Do not add a behavior definition yet. This lesson isolates the data
+          contract so you can explain it before transactional behavior adds
+          another layer.
+        </p>
+      </section>
+
+      <section>
+        <h2>Interview retrieval</h2>
+        <div class="interview-target">
+          <p>
+            Target prompts from the
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s2">CDS</a>
+            and
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s4">RAP</a>
+            sections:
+          </p>
+          <p>
+            <span class="interview-id">CDS B11</span>
+            <span class="interview-id">CDS B13</span>
+            <span class="interview-id">CDS B18</span>
+            <span class="interview-id">CDS B21</span>
+            <span class="interview-id">CDS B27</span>
+            <span class="interview-id">RAP D11</span>
+            <span class="interview-id">RAP D12</span>
+          </p>
+        </div>
+        <p>Close the code and answer:</p>
+        <ul class="checklist">
+          <li>Why use a CDS view entity rather than treat the table as the BO contract?</li>
+          <li>Why do interface and projection entities both exist?</li>
+          <li>Why must the composition be redirected in the projection?</li>
+          <li>What does cardinality communicate, and what does it not decide?</li>
+          <li>What do amount/currency semantics do—and what do they not do?</li>
+          <li>How does a behavior projection differ from a CDS projection?</li>
+        </ul>
+        <p class="answer-frame">
+          Structure each answer as: definition → runtime or consumer consequence
+          → Sales Order example → one limitation or common mistake.
+        </p>
+        <p>
+          <strong>Pass condition:</strong> submit the four connected skeletons,
+          identify one deliberately hidden field, and answer all six questions
+          without reading. At least one answer must explain why projection is
+          not backend enforcement.
+        </p>
+      </section>
+
+      <section>
+        <h2>Primary source</h2>
+        <p>
+          Read SAP Help's
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/projecting-data-model-in-cds-projection-views"
+            >Projecting the Data Model in CDS Projection Views</a
+          > and compare its Travel/Booking topology with your Sales Order
+          skeletons. Use the
+          <a href="../reference/lesson-1-code-trail.html">commit-pinned code trail</a>
+          for exact RAP110 artifacts.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Ask your teaching agent to review your four skeletons and conduct the
+          six-question retrieval check. Next lesson after a pass: expose the
+          projection through a service definition and OData V4 binding.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
