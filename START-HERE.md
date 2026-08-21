@@ -13,6 +13,10 @@ This workspace is a one-month, evidence-driven path toward SAP RAP interview rea
 
 Current lesson: [Lesson 3 — Separate the BO Model from Its Consumer Projection](./lessons/0003-separate-bo-model-from-consumer-projection.html).
 
+Next prepared lesson: [Lesson 4 — Expose a Read-Only OData V4 Service](./lessons/0004-expose-read-only-odata-v4-service.html). Begin it only after the Lesson 3 CDS artifacts activate and navigate correctly in ADT.
+
+Later prepared lesson: [Lesson 5 — Shape Fiori Elements with Metadata](./lessons/0005-shape-fiori-elements-with-metadata.html). Begin it only after Lesson 4's binding, metadata, read, and navigation evidence passes.
+
 ## Course documents
 
 - [Mission](./MISSION.md) — the outcome every lesson must serve.

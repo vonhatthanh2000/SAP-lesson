@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 5 — Shape Fiori Elements with Metadata</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 5 · 50–70 minutes · UI metadata</div>
+        <h1>Shape Fiori elements without moving business rules</h1>
+        <p class="lede">
+          Turn the plain read-only preview into a useful List Report and Object
+          Page, add an Items table and value help, and explain why presentation
+          metadata is not backend enforcement.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite gate</h2>
+        <div class="callout">
+          <p>
+            Start only after Lesson 4's OData V4 UI binding is active and
+            published, <code>$metadata</code> contains both projected entities,
+            and root-to-Item navigation works. UI annotations cannot repair a
+            broken service model.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The tangible win</h2>
+        <div class="callout success">
+          <p>
+            Produce a List Report with meaningful columns and filters, an
+            Object Page with General and Items sections, and Customer/Product
+            value-help dialogs backed by CDS provider entities.
+          </p>
+        </div>
+        <p>
+          The implementation remains read-only. This lesson improves the
+          consumer experience without adding create, update, validation, or
+          action behavior.
+        </p>
+      </section>
+
+      <section>
+        <h2>Put each concern in the right artifact</h2>
+        <table>
+          <thead><tr><th>Concern</th><th>Artifact</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Consumer data shape</td><td>CDS projection</td><td>Expose <code>Status</code>; omit <code>InternalProcessingCode</code>.</td></tr>
+            <tr><td>List/Object Page layout</td><td>Metadata extension</td><td><code>@UI.lineItem</code>, <code>@UI.facet</code>.</td></tr>
+            <tr><td>Lookup provider</td><td>CDS data definition</td><td><code>@Consumption.valueHelpDefinition</code>.</td></tr>
+            <tr><td>Service availability of lookup</td><td>Service model</td><td>Customer/Product provider available in OData metadata.</td></tr>
+            <tr><td>Business consistency</td><td>Base BO behavior</td><td>Submitted orders require a valid Customer and Item.</td></tr>
+            <tr><td>User permission</td><td>Authorization control</td><td>Only an approver may release an order.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Step 1 — Allow metadata extensions</h2>
+        <p>
+          Both consumer projections must opt in:
+        </p>
+        <pre><code>@Metadata.allowExtensions: true
+define root view entity ZC_SalesOrderRequest
+  provider contract transactional_query
+  as projection on ZI_SalesOrderRequest
+{ ... }</code></pre>
+        <pre><code>@Metadata.allowExtensions: true
+define view entity ZC_SalesOrderItem
+  provider contract transactional_query
+  as projection on ZI_SalesOrderItem
+{ ... }</code></pre>
+        <p>
+          This opt-in lets metadata-extension objects annotate the projections
+          without filling the CDS data definitions with UI layout details.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 2 — Annotate the root projection</h2>
+        <p>
+          Create a Metadata Extension for <code>ZC_SalesOrderRequest</code>.
+          Adjust field names only if your activated projection differs.
+        </p>
+        <pre><code>@Metadata.layer: #CORE
+
+@UI.headerInfo: {
+  typeName:       'Sales Order Request',
+  typeNamePlural: 'Sales Order Requests',
+  title:       { type: #STANDARD, value: 'RequestNumber' },
+  description: { value: 'Status' }
+}
+
+annotate entity ZC_SalesOrderRequest with
+{
+  @UI.facet: [
+    { id: 'General', type: #IDENTIFICATION_REFERENCE,
+      label: 'General', position: 10 },
+    { id: 'Items', type: #LINEITEM_REFERENCE,
+      label: 'Items', position: 20, targetElement: '_Items' }
+  ]
+
+  @UI: {
+    lineItem:       [ { position: 10, importance: #HIGH } ],
+    identification: [ { position: 10 } ],
+    selectionField: [ { position: 10 } ]
+  }
+  RequestNumber;
+
+  @UI: {
+    lineItem:       [ { position: 20, importance: #HIGH } ],
+    identification: [ { position: 20 } ],
+    selectionField: [ { position: 20 } ]
+  }
+  SoldToParty;
+
+  @UI: {
+    lineItem:       [ { position: 30, importance: #HIGH } ],
+    identification: [ { position: 30 } ],
+    selectionField: [ { position: 30 } ]
+  }
+  Status;
+
+  @UI: {
+    lineItem:       [ { position: 40, importance: #MEDIUM } ],
+    identification: [ { position: 40 } ]
+  }
+  TotalAmount;
+
+  @UI.hidden: true
+  RequestUUID;
+}</code></pre>
+        <p>
+          The Items facet targets the redirected <code>_Items</code>
+          composition. The child entity's <code>@UI.lineItem</code> annotations
+          determine the columns inside that table.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 3 — Annotate the Item projection</h2>
+        <p>Create a second Metadata Extension:</p>
+        <pre><code>@Metadata.layer: #CORE
+
+@UI.headerInfo: {
+  typeName:       'Sales Order Item',
+  typeNamePlural: 'Sales Order Items',
+  title: { type: #STANDARD, value: 'Product' }
+}
+
+annotate entity ZC_SalesOrderItem with
+{
+  @UI: {
+    lineItem:       [ { position: 10, importance: #HIGH } ],
+    identification: [ { position: 10 } ]
+  }
+  Product;
+
+  @UI: {
+    lineItem:       [ { position: 20, importance: #HIGH } ],
+    identification: [ { position: 20 } ]
+  }
+  RequestedQuantity;
+
+  @UI: {
+    lineItem:       [ { position: 30, importance: #MEDIUM } ],
+    identification: [ { position: 30 } ]
+  }
+  UnitPrice;
+
+  @UI: {
+    lineItem:       [ { position: 40, importance: #HIGH } ],
+    identification: [ { position: 40 } ]
+  }
+  NetAmount;
+
+  @UI.hidden: true
+  ItemUUID;
+
+  @UI.hidden: true
+  RequestUUID;
+}</code></pre>
+        <p>
+          Keep <code>QuantityUnit</code> and <code>TransactionCurrency</code> in
+          the projection even if you do not give them separate columns. Their
+          semantic relationships let the UI interpret quantity and amount
+          fields correctly.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 4 — Add Customer and Product value help</h2>
+        <p>
+          Value help belongs on the relevant element in the CDS data
+          definition—not in the metadata extension. Use the provider entities
+          that actually exist in your system.
+        </p>
+        <pre><code>// In ZC_SalesOrderRequest
+@Consumption.valueHelpDefinition: [ {
+  entity: { name: 'ZI_CustomerReference', element: 'CustomerID' },
+  useForValidation: true
+} ]
+SoldToParty,</code></pre>
+        <pre><code>// In ZC_SalesOrderItem
+@Consumption.valueHelpDefinition: [ {
+  entity: { name: 'ZI_ProductReference', element: 'ProductID' },
+  useForValidation: true
+} ]
+Product,</code></pre>
+        <p>
+          The provider must be available to the OData service. Depending on the
+          ABAP release and value-help pattern, it may appear automatically or
+          need explicit exposure. Verify the generated <code>$metadata</code>;
+          if necessary, add the providers to the service definition:
+        </p>
+        <pre><code>expose ZI_CustomerReference as Customers;
+expose ZI_ProductReference  as Products;</code></pre>
+        <div class="callout">
+          <p>
+            Value help assists selection and can validate against a lookup
+            provider. It does not replace the base BO invariant that a
+            Submitted order must reference an acceptable Customer and Product.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 5 — Verify metadata before appearance</h2>
+        <ol>
+          <li>Activate both projections and both metadata extensions.</li>
+          <li>Activate the updated service definition if provider exposure changed.</li>
+          <li>Refresh or republish according to your system's binding workflow.</li>
+          <li>Open <code>$metadata</code> and find UI line-item/facet annotations.</li>
+          <li>Find the Customer and Product value-list metadata.</li>
+          <li>Open the Fiori Elements preview.</li>
+          <li>Confirm List Report columns and filters.</li>
+          <li>Open one Object Page and confirm the Items table.</li>
+          <li>Open Customer and Product value help and select an entry.</li>
+        </ol>
+        <p>
+          Capture before/after screenshots plus the relevant metadata fragment.
+          The screenshot proves presentation; metadata proves which backend
+          contract produced it.
+        </p>
+      </section>
+
+      <section>
+        <h2>Troubleshooting guide</h2>
+        <table>
+          <thead><tr><th>Symptom</th><th>Check</th><th>Likely cause</th></tr></thead>
+          <tbody>
+            <tr><td>Metadata extension will not activate</td><td><code>@Metadata.allowExtensions</code> and element names</td><td>Projection has not opted in or names differ.</td></tr>
+            <tr><td>List column is missing</td><td><code>@UI.lineItem</code></td><td>Field is not projected, annotation inactive, or metadata stale.</td></tr>
+            <tr><td>Object Page has no Items table</td><td>Facet <code>targetElement</code> and projection redirection</td><td><code>_Items</code> target is wrong or absent.</td></tr>
+            <tr><td>Value-help button is missing</td><td>Value-help annotation and <code>$metadata</code></td><td>Provider/element name is wrong or provider is unavailable to the service.</td></tr>
+            <tr><td>Currency or unit is missing</td><td>Projection contains companion field</td><td>Amount/quantity semantics cannot resolve their code/unit element.</td></tr>
+            <tr><td>Invalid value still reaches the BO</td><td>Base behavior validation</td><td>UI assistance was mistaken for backend enforcement.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Interview retrieval</h2>
+        <div class="interview-target">
+          <p>
+            Target prompts from the
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s2">CDS</a>
+            and
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s3">Fiori</a>
+            sections:
+          </p>
+          <p>
+            <span class="interview-id">CDS B3</span>
+            <span class="interview-id">CDS B23</span>
+            <span class="interview-id">CDS B28</span>
+            <span class="interview-id">Fiori C2</span>
+            <span class="interview-id">Fiori C6</span>
+            <span class="interview-id">Fiori C7</span>
+            <span class="interview-id">Fiori C9</span>
+          </p>
+        </div>
+        <p>Close the source and answer:</p>
+        <ul class="checklist">
+          <li>What are CDS annotations, and what kinds of consumers interpret them?</li>
+          <li>Why keep UI annotations in a metadata extension?</li>
+          <li>What do <code>@UI.lineItem</code>, <code>@UI.identification</code>, <code>@UI.selectionField</code>, and <code>@UI.facet</code> control?</li>
+          <li>Why is value-help definition kept in CDS rather than the UI metadata extension?</li>
+          <li>Why must a value-help provider be available to the service?</li>
+          <li>Why do value help and button visibility not replace backend validation or authorization?</li>
+          <li>How would you diagnose a field or Items table missing from the preview?</li>
+        </ul>
+        <p class="answer-frame">
+          Structure each answer as: annotation responsibility → metadata effect
+          → visible result → enforcement limitation.
+        </p>
+        <p>
+          <strong>Pass condition:</strong> show active metadata extensions,
+          improved List Report and Object Page previews, working Customer and
+          Product value help, corresponding metadata evidence, and seven
+          answers from memory. At least one answer must clearly separate UI
+          assistance from BO enforcement.
+        </p>
+      </section>
+
+      <section>
+        <h2>Primary sources</h2>
+        <p>
+          Use SAP Help's
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/adding-ui-metadata-to-data-model"
+            >Adding UI Metadata to the Data Model</a
+          >,
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/adding-metadata-extensions"
+            >Adding Metadata Extensions</a
+          >, and
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/providing-value-help"
+            >Adding Value Help</a
+          >. Compare the design with the commit-pinned
+          <a href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_c_traveltp_sol.ddlx.asddlxs#L1-L88"
+            >RAP110 Travel metadata extension</a
+          > rather than copying its Travel-specific fields.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Ask your teaching agent to review the metadata and screenshots before
+          the retrieval check. After a pass, move from a read-only service to a
+          managed transactional behavior contract.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

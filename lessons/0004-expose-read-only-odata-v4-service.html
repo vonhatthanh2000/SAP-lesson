@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 4 — Expose a Read-Only OData V4 Service</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 4 · 45–60 minutes · Service exposure</div>
+        <h1>Expose the first read-only vertical slice</h1>
+        <p class="lede">
+          Put the Sales Order projections behind a protocol-independent service
+          definition, bind that service to OData V4 for a UI client, and prove
+          the request reaches the projected root and child.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite gate</h2>
+        <div class="callout">
+          <p>
+            Start this lesson only after the tables and all four Lesson 3 CDS
+            entities activate successfully in ADT. A service cannot repair an
+            invalid composition, missing projection source, or broken
+            redirection.
+          </p>
+        </div>
+        <ul class="checklist">
+          <li><code>ZI_SalesOrderRequest</code> activates.</li>
+          <li><code>ZI_SalesOrderItem</code> activates.</li>
+          <li><code>ZC_SalesOrderRequest</code> activates.</li>
+          <li><code>ZC_SalesOrderItem</code> activates.</li>
+          <li>Data preview can read at least one root and follow its Items association.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>The tangible win</h2>
+        <div class="callout success">
+          <p>
+            Publish a local OData V4 UI endpoint, inspect its metadata, and open
+            a read-only Fiori elements preview containing Sales Order Requests
+            and their Items.
+          </p>
+        </div>
+        <p>
+          This is the first end-to-end executable evidence in the portfolio:
+          persistence → interface CDS → projection CDS → service definition →
+          OData V4 binding → preview.
+        </p>
+      </section>
+
+      <section>
+        <h2>Two artifacts, two decisions</h2>
+        <table>
+          <thead>
+            <tr><th>Artifact</th><th>Question it answers</th><th>Does not own</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Service definition</td>
+              <td>Which CDS entities and names form this business service?</td>
+              <td>OData version, UI/Web API category, or business rules.</td>
+            </tr>
+            <tr>
+              <td>Service binding</td>
+              <td>Which client category and communication protocol expose that definition?</td>
+              <td>Entity topology, validations, calculations, or action implementation.</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          One service definition can support multiple bindings without
+          reimplementing the model. The binding is an ADT repository object with
+          a form-based editor—not ABAP source code.
+        </p>
+      </section>
+
+      <section>
+        <h2>Predict the read path</h2>
+        <div class="flow" aria-label="Read-only OData request path">
+          <span>Fiori preview</span><i>→</i><span>OData V4 binding</span
+          ><i>→</i><span>service definition</span><i>→</i
+          ><span>CDS projections</span><i>→</i><span>interface CDS</span
+          ><i>→</i><span>tables</span>
+        </div>
+        <p>
+          Before opening ADT, say what failure you expect if each layer is
+          missing. This turns activation errors into evidence rather than random
+          trial and error.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 1 — Create the service definition</h2>
+        <p>
+          In the package containing the CDS projections, create a Service
+          Definition named <code>ZUI_SALES_ORDER_REQUEST</code> and use this
+          source:
+        </p>
+        <pre><code>@EndUserText.label: 'Sales Order Request UI Service'
+@ObjectModel.leadingEntity.name: 'ZC_SalesOrderRequest'
+define service ZUI_SALES_ORDER_REQUEST {
+  expose ZC_SalesOrderRequest as SalesOrderRequests;
+  expose ZC_SalesOrderItem    as SalesOrderItems;
+}</code></pre>
+        <p>
+          Expose the projection entities, not the interface entities. The
+          service should honor the consumer boundary you designed in Lesson 3,
+          including the omission of <code>InternalProcessingCode</code>.
+        </p>
+        <div class="callout">
+          <p>
+            Exposing both entities makes the service scope explicit. The root's
+            redirected composition must still target the projected child; the
+            service definition does not recreate that relationship.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 2 — Create the OData V4 UI binding</h2>
+        <ol>
+          <li>Create a Service Binding from the activated service definition.</li>
+          <li>Name it <code>ZUI_SALES_ORDER_REQUEST_O4</code>.</li>
+          <li>Select binding type <strong>OData V4 – UI</strong>.</li>
+          <li>Assign the correct package and transport request.</li>
+          <li>Finish, then activate the binding.</li>
+        </ol>
+        <p>
+          Do not write or copy XML for this step. Repository serializers may
+          represent a binding as XML outside ADT, but developers create and
+          configure the binding with the ADT editor.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 3 — Publish and verify in layers</h2>
+        <ol>
+          <li>Publish the local service endpoint from the binding editor.</li>
+          <li>Confirm that both entity sets appear in the binding.</li>
+          <li>Open the generated service URL and inspect <code>$metadata</code>.</li>
+          <li>Find <code>SalesOrderRequests</code> and <code>SalesOrderItems</code>.</li>
+          <li>Verify that the root-to-item navigation targets the projected item type.</li>
+          <li>Verify that <code>InternalProcessingCode</code> is absent.</li>
+          <li>Open the Fiori Elements App Preview using the root entity.</li>
+        </ol>
+        <p>
+          Local publication enables the endpoint in the current system. It is
+          not the same as transporting repository objects or deploying a Fiori
+          application to a production launchpad.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 4 — Trace one real read</h2>
+        <p>
+          Capture one successful request for the root collection and annotate
+          it using this table:
+        </p>
+        <table>
+          <thead><tr><th>Evidence</th><th>What it proves</th></tr></thead>
+          <tbody>
+            <tr><td>Binding and generated service URL</td><td>The definition is attached to an OData V4 UI protocol.</td></tr>
+            <tr><td><code>$metadata</code> entity sets</td><td>The service exposes the two projected entities.</td></tr>
+            <tr><td>Navigation metadata</td><td>Composition redirection survived service exposure.</td></tr>
+            <tr><td>Root collection response</td><td>The request reaches projection, interface model, and persistence.</td></tr>
+            <tr><td>Fiori preview</td><td>A metadata-driven client can consume the service.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Record the actual generated URLs from your system. Do not memorize or
+          invent a URL pattern because service paths vary by binding and system.
+        </p>
+      </section>
+
+      <section>
+        <h2>Troubleshoot from the boundary inward</h2>
+        <table>
+          <thead><tr><th>Symptom</th><th>Inspect first</th><th>Likely lesson</th></tr></thead>
+          <tbody>
+            <tr><td>Binding cannot activate</td><td>Service definition and projected entities</td><td>A dependency is inactive or inconsistent.</td></tr>
+            <tr><td>Entity set is missing</td><td><code>expose</code> statements</td><td>The service scope is incomplete.</td></tr>
+            <tr><td>Item navigation is missing or wrong</td><td>Projection redirection</td><td>The projected graph is incomplete.</td></tr>
+            <tr><td>Unexpected internal field appears</td><td>CDS projection field list</td><td>The consumer boundary exposes too much.</td></tr>
+            <tr><td>List is empty</td><td>CDS data preview and test data</td><td>The service may work while persistence has no visible rows.</td></tr>
+            <tr><td>Preview looks plain</td><td>UI annotations</td><td>Presentation metadata comes in the next lesson; it is not a service failure.</td></tr>
+            <tr><td>Publish is unavailable or denied</td><td>System capability and authorization</td><td>Local enablement depends on the target environment.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Interview retrieval</h2>
+        <div class="interview-target">
+          <p>
+            Target prompts from the
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s2">CDS</a>,
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s3">Fiori</a>,
+            and
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s4">RAP</a>
+            sections:
+          </p>
+          <p>
+            <span class="interview-id">CDS B6</span>
+            <span class="interview-id">Fiori C3</span>
+            <span class="interview-id">Fiori C5</span>
+            <span class="interview-id">RAP D3</span>
+          </p>
+        </div>
+        <p>Close ADT and answer:</p>
+        <ul class="checklist">
+          <li>What is the difference between a service definition and a service binding?</li>
+          <li>Why expose projection entities rather than interface entities?</li>
+          <li>Why can one service definition have multiple bindings?</li>
+          <li>Why choose OData V4 UI rather than <code>@OData.publish: true</code> for this project?</li>
+          <li>What is the difference between activating, publishing locally, transporting, and deploying?</li>
+          <li>Why must business invariants remain outside the service definition and binding?</li>
+        </ul>
+        <p class="answer-frame">
+          Structure each answer as: responsibility → runtime consequence →
+          Sales Order evidence → common misconception.
+        </p>
+        <p>
+          <strong>Pass condition:</strong> provide the activated service
+          definition, active/published OData V4 UI binding, metadata evidence,
+          one successful root read, one navigation check, and six answers from
+          memory. If your system does not permit publication, record the exact
+          environment limitation; source inspection alone does not count as an
+          implementation pass.
+        </p>
+      </section>
+
+      <section>
+        <h2>Primary sources</h2>
+        <p>
+          Follow SAP Help's
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/creating-service-definition-and-service-binding"
+            >Creating a Service Definition and a Service Binding</a
+          > and
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/service-binding?locale=en-US"
+            >Service Binding</a
+          >. Compare your service definition with the commit-pinned
+          <a href="https://github.com/SAP-samples/abap-platform-rap110/blob/8fb9d7ba474d3702f9b9db4ca05a2227c66a200e/src/zrap110_ui_travel_sol.srvd.srvdsrv#L1-L14"
+            >RAP110 service definition</a
+          >. Use the
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/fiori-element-app-preview-feap?locale=en-US"
+            >Fiori Elements App Preview documentation</a
+          > to understand what the preview proves and what it does not replace.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Ask your teaching agent to inspect your service definition, binding
+          evidence, and request trace. After a pass, continue to
+          <a href="./0005-shape-fiori-elements-with-metadata.html">Lesson 5</a>
+          to add UI and value-help metadata without moving business rules into
+          presentation annotations.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
