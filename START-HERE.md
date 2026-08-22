@@ -17,6 +17,8 @@ Next prepared lesson: [Lesson 4 — Expose a Read-Only OData V4 Service](./lesso
 
 Later prepared lesson: [Lesson 5 — Shape Fiori Elements with Metadata](./lessons/0005-shape-fiori-elements-with-metadata.html). Begin it only after Lesson 4's binding, metadata, read, and navigation evidence passes.
 
+First transactional lesson: [Lesson 6 — Enable Managed CRUD](./lessons/0006-enable-managed-crud.html). Begin it only after the Lesson 5 metadata extensions, Items facet, and value-help evidence pass.
+
 ## Course documents
 
 - [Mission](./MISSION.md) — the outcome every lesson must serve.

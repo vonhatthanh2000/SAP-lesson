@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 6 — Enable Managed CRUD</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 6 · 70–90 minutes · Managed behavior</div>
+        <h1>Turn the read-only model into a transactional business object</h1>
+        <p class="lede">
+          Declare managed CRUD for the Sales Order Request aggregate, create
+          Items only through their parent, expose the behavior to the UI
+          service, and trace one change from the transactional buffer to the
+          database.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite gate</h2>
+        <div class="callout">
+          <p>
+            Start after Lessons 3–5 activate in ADT: the interface composition
+            and projected redirection work, the OData V4 UI binding is
+            published, and the preview can read a Request with its Items.
+          </p>
+        </div>
+        <ul class="checklist">
+          <li>The root and Item database tables activate.</li>
+          <li>The root and Item keys are UUID-compatible <code>raw(16)</code> fields.</li>
+          <li>Your actual entity and association names are consistent; do not mix <code>ZI_</code>/<code>ZR_</code> or <code>_Item</code>/<code>_Items</code>.</li>
+          <li>You can restore your test data if delete testing removes it.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>The tangible win</h2>
+        <div class="callout success">
+          <p>
+            Create, edit, and delete a Sales Order Request in the Fiori
+            Elements preview; save it; then add, edit, and delete an Item
+            through the Request's Items section.
+          </p>
+        </div>
+        <p>
+          This is the first transactional slice, not the final portfolio
+          version. It intentionally has no draft, ETag, custom validation,
+          total calculation, Submit action, or authorization implementation.
+        </p>
+      </section>
+
+      <section>
+        <h2>Two behavior contracts</h2>
+        <table>
+          <thead><tr><th>Artifact</th><th>Responsibility</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Base behavior definition</td><td>Defines the reusable BO's complete transactional contract.</td><td>Managed persistence, CRUD, numbering, lock dependency, field control.</td></tr>
+            <tr><td>Behavior projection</td><td>Selects which existing behavior this consumer may use.</td><td><code>use create</code>, <code>use update</code>, and Item create-by-association.</td></tr>
+            <tr><td>Behavior pool</td><td>Contains custom handler/saver logic when declared behavior requires implementation.</td><td>Later validations, determinations, actions, and authorization.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Managed does not mean “there is no behavior.” It means the RAP
+          managed provider supplies the transactional buffer and standard
+          persistence for operations you declare. No custom CRUD methods are
+          needed for this lesson.
+        </p>
+      </section>
+
+      <section>
+        <h2>Predict the write path</h2>
+        <div class="flow" aria-label="Managed RAP write path">
+          <span>Fiori save</span><i>→</i><span>projected behavior</span
+          ><i>→</i><span>base behavior</span><i>→</i
+          ><span>transactional buffer</span><i>→</i
+          ><span>managed save sequence</span><i>→</i><span>tables</span>
+        </div>
+        <p>
+          During the interaction phase, changes belong to the transactional
+          buffer. The managed provider persists the consistent buffer state in
+          the save sequence. Declaring <code>create</code> does not mean every
+          field change is immediately written to the table.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 1 — Create the base behavior definition</h2>
+        <p>
+          Create a Behavior Definition from your root interface entity and
+          choose implementation type <strong>Managed</strong>. The skeleton
+          below uses the <code>ZI_</code> and <code>_Items</code> names used in
+          the recent lessons. Replace them once with your activated names.
+        </p>
+        <pre><code>managed implementation in class ZBP_I_SALESORDERREQUEST unique;
+strict ( 2 );
+
+define behavior for ZI_SalesOrderRequest alias SalesOrderRequest
+  persistent table zsor_request
+  lock master
+{
+  create;
+  update;
+  delete;
+
+  association _Items { create; }
+
+  field ( numbering : managed, readonly ) RequestUUID;
+  field ( mandatory : create ) SoldToParty, TransactionCurrency;
+  field ( readonly ) TotalAmount;
+
+  mapping for zsor_request
+  {
+    RequestUUID        = request_uuid;
+    SoldToParty        = sold_to_party;
+    Status             = status;
+    TotalAmount        = total_amount;
+    TransactionCurrency = transaction_currency;
+  }
+}
+
+define behavior for ZI_SalesOrderItem alias SalesOrderItem
+  persistent table zsor_item
+  lock dependent by _SalesOrderRequest
+{
+  update;
+  delete;
+
+  association _SalesOrderRequest;
+
+  field ( numbering : managed, readonly ) ItemUUID;
+  field ( readonly ) RequestUUID, NetAmount;
+  field ( mandatory : create ) Product, RequestedQuantity, QuantityUnit,
+                               UnitPrice, TransactionCurrency;
+
+  mapping for zsor_item
+  {
+    ItemUUID            = item_uuid;
+    RequestUUID         = request_uuid;
+    Product             = product;
+    RequestedQuantity   = requested_quantity;
+    QuantityUnit        = quantity_unit;
+    UnitPrice           = unit_price;
+    NetAmount           = net_amount;
+    TransactionCurrency = transaction_currency;
+  }
+}</code></pre>
+        <div class="callout">
+          <p>
+            Complete the mapping for every persistent element in your real
+            interface entity, including fields such as
+            <code>RequestNumber</code> if you added them. Managed numbering
+            works here only when the numbered key has UUID type
+            <code>raw(16)</code>.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Read each declaration as a design decision</h2>
+        <table>
+          <thead><tr><th>Declaration</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td><code>managed</code></td><td>RAP supplies standard CRUD buffering and persistence.</td></tr>
+            <tr><td><code>strict ( 2 )</code></td><td>Activates current BDL consistency and best-practice checks.</td></tr>
+            <tr><td><code>persistent table</code></td><td>Identifies where managed persistence stores the entity.</td></tr>
+            <tr><td><code>lock master</code></td><td>The root owns the aggregate lock.</td></tr>
+            <tr><td><code>lock dependent by</code></td><td>Item locking resolves through the parent Request.</td></tr>
+            <tr><td><code>association _Items { create; }</code></td><td>Enables child creation through an existing parent.</td></tr>
+            <tr><td><code>numbering : managed</code></td><td>RAP assigns the UUID during create.</td></tr>
+            <tr><td><code>readonly</code>/<code>mandatory : create</code></td><td>Restricts consumer writes or requires presence on create; it does not validate business meaning.</td></tr>
+            <tr><td><code>mapping for</code></td><td>Connects CDS element names to differently named table fields.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Notice that the child has no standalone <code>create</code>. An Item
+          has no independent lifecycle, so it is created through
+          <code>_Items</code> on its parent.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 2 — Create the behavior pool</h2>
+        <ol>
+          <li>Activate the base behavior definition.</li>
+          <li>Use the ADT quick fix on the implementation class name to create <code>ZBP_I_SALESORDERREQUEST</code>.</li>
+          <li>Activate the behavior pool.</li>
+          <li>Do not add handwritten create, update, delete, or save methods.</li>
+        </ol>
+        <p>
+          The class artifact is the home for behavior you will implement later.
+          Standard managed CRUD and save are already supplied by the framework.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 3 — Project the behavior</h2>
+        <p>
+          Create a Behavior Definition from the root projection entity and
+          choose implementation type <strong>Projection</strong>:
+        </p>
+        <pre><code>projection;
+strict ( 2 );
+
+define behavior for ZC_SalesOrderRequest alias SalesOrderRequest
+{
+  use create;
+  use update;
+  use delete;
+
+  use association _Items { create; }
+}
+
+define behavior for ZC_SalesOrderItem alias SalesOrderItem
+{
+  use update;
+  use delete;
+
+  use association _SalesOrderRequest;
+}</code></pre>
+        <p>
+          The projection does not implement CRUD again. Each
+          <code>use</code> exposes behavior already defined by the base BO. A
+          future API projection could deliberately omit <code>use delete</code>
+          while reusing the same base behavior.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 4 — Activate and refresh the service</h2>
+        <ol>
+          <li>Activate the base behavior definition and behavior pool.</li>
+          <li>Activate the behavior projection.</li>
+          <li>Activate the CDS projections and service definition if ADT reports dependent changes.</li>
+          <li>Refresh or republish the OData V4 UI binding as required by your system.</li>
+          <li>Inspect <code>$metadata</code> and confirm that insert, update, and delete restrictions now permit the projected operations.</li>
+          <li>Open a fresh Fiori Elements preview.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Step 5 — Prove the transaction</h2>
+        <ol>
+          <li>Create a Request with Customer and Currency, then save it.</li>
+          <li>Confirm that RAP generated <code>RequestUUID</code>.</li>
+          <li>Edit one permitted header field and save again.</li>
+          <li>Open the saved Request and create an Item through the Items section.</li>
+          <li>Enter Product, quantity/unit, price, and currency; then save.</li>
+          <li>Confirm that RAP generated <code>ItemUUID</code> and linked <code>RequestUUID</code>.</li>
+          <li>Edit and then delete that Item through the parent.</li>
+          <li>Create disposable test data and verify root delete; do not delete evidence you cannot restore.</li>
+          <li>Use table/CDS preview only after save to prove persistence.</li>
+        </ol>
+        <p>
+          Record one before-save screenshot, one successful save, and the
+          persisted row. Explain that UI state is not database evidence until
+          the save sequence completes.
+        </p>
+      </section>
+
+      <section>
+        <h2>Run three failure-oriented checks</h2>
+        <table>
+          <thead><tr><th>Check</th><th>Expected result</th><th>What it proves</th></tr></thead>
+          <tbody>
+            <tr><td>Leave a statically mandatory field empty.</td><td>The consumer/runtime refuses completion and identifies the missing field.</td><td>BDEF field control reached the consumer.</td></tr>
+            <tr><td>Try to type a UUID or <code>TotalAmount</code>.</td><td>The field is not editable.</td><td>Static read-only behavior is exposed.</td></tr>
+            <tr><td>Look for standalone Item creation.</td><td>Items are created through the parent, not as independent roots.</td><td>Behavior follows composition ownership.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <p>
+            These checks do not prove business consistency. Quantity greater
+            than zero, Product eligibility, total calculation, and valid status
+            transitions require later determinations and validations.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Troubleshooting guide</h2>
+        <table>
+          <thead><tr><th>Symptom</th><th>Inspect first</th><th>Likely cause</th></tr></thead>
+          <tbody>
+            <tr><td>Base BDEF does not activate</td><td>Entity names, persistent tables, field mapping</td><td>The skeleton does not match the activated data model.</td></tr>
+            <tr><td>Managed numbering is rejected</td><td>Dictionary type of the key</td><td>The key is not UUID-compatible <code>raw(16)</code>.</td></tr>
+            <tr><td>Create/Edit buttons are absent</td><td>Behavior projection and OData metadata</td><td>The operation was not projected or the service metadata is stale.</td></tr>
+            <tr><td>Request saves but Item cannot be added</td><td><code>_Items { create; }</code> in both behavior layers</td><td>Create-by-association is missing or the composition name differs.</td></tr>
+            <tr><td>Item has no parent key</td><td>Parent association ON condition and composition redirection</td><td>The CDS graph and behavior association do not agree.</td></tr>
+            <tr><td>Save fails with a persistence error</td><td>Mappings, nullability, lengths, and table keys</td><td>The buffered entity cannot be mapped to a valid table row.</td></tr>
+            <tr><td>Invalid business data saves</td><td>Current lesson scope</td><td>No custom validation exists yet.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Interview retrieval</h2>
+        <div class="interview-target">
+          <p>
+            Target prompts from the
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s4">RAP section</a>:
+          </p>
+          <p>
+            <span class="interview-id">RAP D2</span>
+            <span class="interview-id">RAP D4</span>
+            <span class="interview-id">RAP D12</span>
+            <span class="interview-id">RAP D14</span>
+            <span class="interview-id">RAP D16</span>
+            <span class="interview-id">RAP D19</span>
+            <span class="interview-id">RAP D25</span>
+            <span class="interview-id">RAP D27</span>
+          </p>
+        </div>
+        <p>Close ADT and answer:</p>
+        <ul class="checklist">
+          <li>What does managed RAP provide, and what remains your responsibility?</li>
+          <li>Why do you declare operations in both the base BDEF and behavior projection?</li>
+          <li>Why is Item created by association instead of standalone create?</li>
+          <li>What is the difference between <code>readonly</code>, <code>mandatory : create</code>, and a business validation?</li>
+          <li>When is the UUID assigned by managed early numbering, and what key type does it require?</li>
+          <li>What does <code>strict ( 2 )</code> contribute?</li>
+          <li>What is the difference between transactional-buffer state and database state?</li>
+          <li>Why does managed CRUD require no handwritten CRUD/save implementation here?</li>
+        </ul>
+        <p class="answer-frame">
+          Structure each answer as: declared contract → framework responsibility
+          → developer responsibility → Sales Order evidence.
+        </p>
+        <p>
+          <strong>Pass condition:</strong> show active base and projected BDEFs,
+          an active behavior pool, successful root CRUD, Item
+          create-by-association, framework-assigned UUIDs, persisted rows, the
+          three failure-oriented checks, and eight answers from memory.
+        </p>
+      </section>
+
+      <section>
+        <h2>Primary sources</h2>
+        <p>
+          Use SAP Help's
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/defining-standard-behavior">Defining Standard Behavior</a>,
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/projecting-behavior">Projecting the Behavior</a>,
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/numbering">Numbering</a>, and
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/rap-bo-runtime">RAP BO Runtime</a>.
+          Compare the design with SAP's
+          <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/main/week4/unit4.md">openSAP behavior-projection exercise</a>
+          without copying its Travel-specific names.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Ask your teaching agent to inspect the two behavior definitions and
+          CRUD evidence before the retrieval check. The next lesson should add
+          draft and concurrency control before custom business rules.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
