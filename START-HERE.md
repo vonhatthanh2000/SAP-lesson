@@ -19,6 +19,8 @@ Later prepared lesson: [Lesson 5 — Shape Fiori Elements with Metadata](./lesso
 
 First transactional lesson: [Lesson 6 — Enable Managed CRUD](./lessons/0006-enable-managed-crud.html). Begin it only after the Lesson 5 metadata extensions, Items facet, and value-help evidence pass.
 
+Concurrency lesson: [Lesson 7 — Protect Edits with Draft and ETags](./lessons/0007-protect-edits-with-draft-and-etags.html). Begin it only after Lesson 6 root CRUD, Item create-by-association, and managed-numbering evidence pass.
+
 ## Course documents
 
 - [Mission](./MISSION.md) — the outcome every lesson must serve.

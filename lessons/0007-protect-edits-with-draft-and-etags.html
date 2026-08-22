@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 7 — Protect Edits with Draft and ETags</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 7 · 90–120 minutes · Draft and concurrency</div>
+        <h1>Let users pause safely without allowing lost updates</h1>
+        <p class="lede">
+          Persist work in progress in draft tables, keep active data unchanged
+          until activation, and use managed locks plus entity and total ETags
+          to protect concurrent editing of the Sales Order Request aggregate.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite gate</h2>
+        <div class="callout">
+          <p>
+            Start only after Lesson 6 passes in ADT: both behavior definitions
+            activate, root CRUD works, an Item can be created through
+            <code>_Items</code>, and managed UUID numbering produces persisted
+            keys.
+          </p>
+        </div>
+        <ul class="checklist">
+          <li>Export or record the current active-table definitions before changing them.</li>
+          <li>Use disposable test records for concurrency tests.</li>
+          <li>Arrange a second browser profile or second test user if your system permits it.</li>
+          <li>Keep the OData V4 UI binding from Lesson 4.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>The tangible win</h2>
+        <div class="callout success">
+          <p>
+            Start editing a Request, close the application, reopen the saved
+            draft, and either discard or activate it. Then demonstrate that a
+            second user or a stale OData request cannot silently overwrite a
+            newer active version.
+          </p>
+        </div>
+        <p>
+          This lesson protects editing mechanics. Calculating totals,
+          validating business rules, and implementing Submit remain later
+          lessons.
+        </p>
+      </section>
+
+      <section>
+        <h2>Five states and controls that must not be confused</h2>
+        <table>
+          <thead><tr><th>Mechanism</th><th>Question it answers</th><th>Lifetime/scope</th></tr></thead>
+          <tbody>
+            <tr><td>Transactional buffer</td><td>Where are changes held during the current RAP transaction?</td><td>Temporary; cleared when the transaction finishes.</td></tr>
+            <tr><td>Draft persistence</td><td>How can unfinished work survive requests or sessions?</td><td>Persisted in separate draft tables until discard or activation.</td></tr>
+            <tr><td>Managed lock</td><td>Who may modify the aggregate right now?</td><td>Pessimistic, exclusive control rooted at the lock master.</td></tr>
+            <tr><td>Entity ETag</td><td>Is the entity version being modified still the version the client read?</td><td>Optimistic check for an OData modification.</td></tr>
+            <tr><td>Total ETag</td><td>Did any active entity in the draft BO change while an edit draft was held?</td><td>Optimistic comparison for the whole BO during draft resume/transition.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Predict the draft lifecycle</h2>
+        <div class="flow" aria-label="Draft lifecycle">
+          <span>Active Request</span><i>→ Edit →</i><span>Draft copy</span
+          ><i>→ autosave →</i><span>Draft table</span><i>→ Activate →</i
+          ><span>Active table</span>
+        </div>
+        <p>
+          <code>Edit</code> copies active data into draft persistence.
+          <code>Prepare</code> will later run selected determinations and
+          validations. <code>Activate</code> transfers the accepted draft state
+          to active persistence. <code>Discard</code> removes the draft without
+          changing active data, and <code>Resume</code> re-establishes editing
+          after the durable lock has expired.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 1 — Add administrative fields to active persistence</h2>
+        <p>
+          Add these fields to <code>zsor_request</code>. Use the equivalent
+          released data elements available in your ABAP release if the names
+          differ:
+        </p>
+        <pre><code>local_created_by       : abp_creation_user;
+local_created_at       : abp_creation_tstmpl;
+local_last_changed_by  : abp_locinst_lastchange_user;
+local_last_changed_at  : abp_locinst_lastchange_tstmpl;
+last_changed_at        : abp_lastchange_tstmpl;</code></pre>
+        <p>Add the entity-local administrative fields to <code>zsor_item</code>:</p>
+        <pre><code>local_created_by       : abp_creation_user;
+local_created_at       : abp_creation_tstmpl;
+local_last_changed_by  : abp_locinst_lastchange_user;
+local_last_changed_at  : abp_locinst_lastchange_tstmpl;</code></pre>
+        <p>
+          <code>LocalLastChangedAt</code> will be each entity's local ETag.
+          Root <code>LastChangedAt</code> will be the aggregate's total ETag.
+          Keep them as separate fields because they answer different
+          concurrency questions.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 2 — Expose the administrative semantics</h2>
+        <p>Add the following elements to the root interface entity:</p>
+        <pre><code>@Semantics.user.createdBy: true
+Request.local_created_by as LocalCreatedBy,
+
+@Semantics.systemDateTime.createdAt: true
+Request.local_created_at as LocalCreatedAt,
+
+@Semantics.user.localInstanceLastChangedBy: true
+Request.local_last_changed_by as LocalLastChangedBy,
+
+@Semantics.systemDateTime.localInstanceLastChangedAt: true
+Request.local_last_changed_at as LocalLastChangedAt,
+
+@Semantics.systemDateTime.lastChangedAt: true
+Request.last_changed_at as LastChangedAt,</code></pre>
+        <p>Add the local fields to the Item interface entity:</p>
+        <pre><code>@Semantics.user.createdBy: true
+Item.local_created_by as LocalCreatedBy,
+
+@Semantics.systemDateTime.createdAt: true
+Item.local_created_at as LocalCreatedAt,
+
+@Semantics.user.localInstanceLastChangedBy: true
+Item.local_last_changed_by as LocalLastChangedBy,
+
+@Semantics.systemDateTime.localInstanceLastChangedAt: true
+Item.local_last_changed_at as LocalLastChangedAt,</code></pre>
+        <p>
+          Project these elements through <code>ZC_SalesOrderRequest</code> and
+          <code>ZC_SalesOrderItem</code>. The ETag fields must reach the OData
+          contract even if you hide their visual presentation.
+        </p>
+        <pre><code>// Root projection
+LocalCreatedBy,
+LocalCreatedAt,
+LocalLastChangedBy,
+LocalLastChangedAt,
+LastChangedAt,
+
+// Item projection
+LocalCreatedBy,
+LocalCreatedAt,
+LocalLastChangedBy,
+LocalLastChangedAt,</code></pre>
+      </section>
+
+      <section>
+        <h2>Step 3 — Draft-enable the base behavior</h2>
+        <p>
+          Extend the Lesson 6 BDEF. The following shows the new concurrency
+          declarations and the affected existing lines; preserve your complete
+          field mappings and controls.
+        </p>
+        <pre><code>managed implementation in class ZBP_I_SALESORDERREQUEST unique;
+strict ( 2 );
+with draft;
+
+define behavior for ZI_SalesOrderRequest alias SalesOrderRequest
+  persistent table zsor_request
+  draft table zsor_req_d
+  lock master
+  total etag LastChangedAt
+  etag master LocalLastChangedAt
+{
+  create;
+  update;
+  delete;
+
+  draft action Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare;
+
+  association _Items { create; with draft; }
+
+  field ( numbering : managed, readonly ) RequestUUID;
+  field ( readonly ) TotalAmount,
+                     LocalCreatedBy, LocalCreatedAt,
+                     LocalLastChangedBy, LocalLastChangedAt,
+                     LastChangedAt;
+
+  mapping for zsor_request
+  {
+    // Keep every Lesson 6 mapping, then add:
+    LocalCreatedBy      = local_created_by;
+    LocalCreatedAt      = local_created_at;
+    LocalLastChangedBy  = local_last_changed_by;
+    LocalLastChangedAt  = local_last_changed_at;
+    LastChangedAt       = last_changed_at;
+  }
+}
+
+define behavior for ZI_SalesOrderItem alias SalesOrderItem
+  persistent table zsor_item
+  draft table zsor_item_d
+  lock dependent by _SalesOrderRequest
+  etag master LocalLastChangedAt
+{
+  update;
+  delete;
+
+  association _SalesOrderRequest { with draft; }
+
+  field ( numbering : managed, readonly ) ItemUUID;
+  field ( readonly ) RequestUUID, NetAmount,
+                     LocalCreatedBy, LocalCreatedAt,
+                     LocalLastChangedBy, LocalLastChangedAt;
+
+  mapping for zsor_item
+  {
+    // Keep every Lesson 6 mapping, then add:
+    LocalCreatedBy      = local_created_by;
+    LocalCreatedAt      = local_created_at;
+    LocalLastChangedBy  = local_last_changed_by;
+    LocalLastChangedAt  = local_last_changed_at;
+  }
+}</code></pre>
+        <div class="callout">
+          <p>
+            Do not paste the abbreviated mapping over your full Lesson 6
+            mapping. Merge the added fields into it. Also keep your existing
+            <code>mandatory : create</code> declarations.
+          </p>
+        </div>
+        <p>
+          Draft <code>Edit</code> has an instance-feature hook. If your ADT
+          release requires a handler method during activation, use Quick Fix to
+          generate the <code>FOR INSTANCE FEATURES</code> method and temporarily
+          return Edit as enabled for every requested key:
+        </p>
+        <pre><code>result = VALUE #( FOR key IN keys
+  ( %tky = key-%tky
+    %action-Edit = if_abap_behv=&gt;fc-o-enabled ) ).</code></pre>
+        <p>
+          Do not invent the method signature; let ADT generate it. A later
+          feature-control lesson will replace the unconditional result with a
+          status-dependent rule.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 4 — Generate the draft tables with ADT</h2>
+        <ol>
+          <li>After adding <code>with draft</code> and each <code>draft table</code> declaration, place the cursor on the draft-table error.</li>
+          <li>Use Quick Fix to generate <code>zsor_req_d</code> and <code>zsor_item_d</code>.</li>
+          <li>Confirm that each generated table contains the CDS alias fields and <code>"%admin" : include sych_bdl_draft_admin_inc;</code>.</li>
+          <li>Activate both draft tables and then the base BDEF.</li>
+        </ol>
+        <div class="callout">
+          <p>
+            Let ADT derive draft tables from the actual CDS entities. Do not
+            maintain them by hand and do not read or modify them with direct
+            SQL. Regenerating an existing draft table can overwrite its
+            definition, so inspect pending changes before accepting a
+            regeneration.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 5 — Project draft behavior</h2>
+        <p>Replace the Lesson 6 behavior projection with the draft-aware form:</p>
+        <pre><code>projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZC_SalesOrderRequest alias SalesOrderRequest
+  use etag
+{
+  use create;
+  use update;
+  use delete;
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  use association _Items { create; with draft; }
+}
+
+define behavior for ZC_SalesOrderItem alias SalesOrderItem
+  use etag
+{
+  use update;
+  use delete;
+
+  use association _SalesOrderRequest { with draft; }
+}</code></pre>
+        <p>
+          Draft actions are supplied by the RAP draft runtime. Do not implement
+          custom action methods unless you explicitly declare additional
+          implementation or dynamic feature control. Later lessons will attach
+          validations and determinations to <code>Prepare</code>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 6 — Activate from persistence outward</h2>
+        <ol>
+          <li>Activate the two active tables.</li>
+          <li>Activate both interface entities and both projections.</li>
+          <li>Generate/activate the draft tables.</li>
+          <li>Activate the base BDEF and behavior pool.</li>
+          <li>Activate the behavior projection.</li>
+          <li>Refresh or republish the OData V4 UI binding as your system requires.</li>
+          <li>Inspect <code>$metadata</code> for ETag and draft capabilities.</li>
+        </ol>
+        <p>
+          In the service metadata and runtime requests, expect draft-related
+          technical state such as active/draft indicators. These are generated
+          by the framework; they are not new business fields in your tables.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 7 — Prove the draft lifecycle</h2>
+        <ol>
+          <li>Open an existing active Request and choose Edit.</li>
+          <li>Change a harmless field and navigate away without activating.</li>
+          <li>Verify through the normal UI or OData draft contract that a draft exists; do not query the draft table directly.</li>
+          <li>Confirm that the active CDS/table value has not changed.</li>
+          <li>Reopen the application and continue the draft.</li>
+          <li>Discard it and confirm that active data remains unchanged.</li>
+          <li>Repeat the edit, then activate/save it.</li>
+          <li>Confirm that active persistence now contains the new value and the timestamps changed.</li>
+          <li>Create a new Request draft, close/reopen it, then activate it.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Step 8 — Prove concurrency rather than only describing it</h2>
+        <table>
+          <thead><tr><th>Test</th><th>Procedure</th><th>Expected evidence</th></tr></thead>
+          <tbody>
+            <tr><td>Exclusive edit</td><td>User A edits a Request; User B attempts to edit the same active Request.</td><td>User B cannot silently obtain a competing exclusive edit draft.</td></tr>
+            <tr><td>Stale entity ETag</td><td>Capture an entity response and ETag, change and activate the entity elsewhere, then issue a permitted modification using the old <code>If-Match</code>.</td><td>The service rejects the stale modification—commonly with HTTP 412—instead of overwriting the newer version.</td></tr>
+            <tr><td>Total ETag reasoning</td><td>Record the total ETag before and after changing either the root or an Item.</td><td>The root total ETag represents change to the whole active aggregate.</td></tr>
+            <tr><td>Expired-lock resume</td><td>If your environment and timeout permit, resume an old edit draft after active data changed.</td><td>Total-ETag comparison prevents unsafe continuation. Otherwise document this as an unexecuted environment-limited test.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Use the browser network trace or an authorized OData client for the
+          stale-ETag test. Never modify production or shared customer data for
+          a portfolio experiment.
+        </p>
+      </section>
+
+      <section>
+        <h2>Troubleshooting guide</h2>
+        <table>
+          <thead><tr><th>Symptom</th><th>Inspect first</th><th>Likely cause</th></tr></thead>
+          <tbody>
+            <tr><td>BDEF asks for total ETag</td><td>Root <code>lock master</code> and <code>LastChangedAt</code></td><td>Every draft BO requires a root total ETag.</td></tr>
+            <tr><td>ETag does not change</td><td>CDS semantics and BDEF mapping</td><td>The timestamp lacks the correct annotation or mapping.</td></tr>
+            <tr><td>Draft table generation fails</td><td>Activated CDS aliases and compatible types</td><td>The draft shape cannot be derived from an inconsistent entity.</td></tr>
+            <tr><td>Item navigation crosses active/draft state</td><td><code>with draft</code> on both BO-internal associations</td><td>The composition path was not explicitly draft-enabled.</td></tr>
+            <tr><td>Edit/Save buttons are missing</td><td><code>use draft</code>, projected actions, and service metadata</td><td>The behavior projection or cached metadata is incomplete.</td></tr>
+            <tr><td>Second user can overwrite changes</td><td>Projected <code>use etag</code> and HTTP <code>If-Match</code></td><td>The optimistic concurrency contract is missing or bypassed.</td></tr>
+            <tr><td>Draft data was inspected with SQL</td><td>Testing method</td><td>Use RAP/OData/EML so draft administration remains consistent.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Interview retrieval</h2>
+        <div class="interview-target">
+          <p>
+            Target prompts from the
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s1">ABAP</a>
+            and
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s4">RAP</a>
+            sections:
+          </p>
+          <p>
+            <span class="interview-id">ABAP A23</span>
+            <span class="interview-id">RAP D5</span>
+            <span class="interview-id">RAP D17</span>
+            <span class="interview-id">RAP D21</span>
+            <span class="interview-id">RAP D28</span>
+          </p>
+        </div>
+        <p>Close ADT and answer:</p>
+        <ul class="checklist">
+          <li>How does draft differ from the transactional buffer?</li>
+          <li>Why does every draft-enabled entity need separate draft persistence, and why should application code not access it with SQL?</li>
+          <li>What do Edit, Activate, Discard, Resume, and Prepare do?</li>
+          <li>How do managed locks and ETags address different concurrency risks?</li>
+          <li>How does an entity ETag differ from the root total ETag?</li>
+          <li>Why must the root-to-Item and Item-to-root associations be marked <code>with draft</code>?</li>
+          <li>How would you demonstrate a stale-update rejection?</li>
+          <li>Why do UUID keys still use managed early numbering in this draft BO?</li>
+        </ul>
+        <p class="answer-frame">
+          Structure each answer as: risk → RAP mechanism → lifecycle moment →
+          Sales Order evidence.
+        </p>
+        <p>
+          <strong>Pass condition:</strong> show active administrative fields,
+          two generated draft tables, draft-enabled base and projected BDEFs,
+          edit/reopen/discard/activate evidence, changed ETags, one exclusive
+          edit test, one stale-update test or documented environment blocker,
+          and eight answers from memory.
+        </p>
+      </section>
+
+      <section>
+        <h2>Primary sources</h2>
+        <p>
+          Use SAP Help's
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/adding-draft-capabilities-to-managed-business-object">Adding Draft Capabilities to the Managed Business Object</a>,
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/draft-database-table">Draft Database Table</a>,
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/draft-actions">Draft Actions</a>,
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/etag-definition">ETag Definition</a>, and
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/total-etag">Total ETag</a>.
+          Compare the implementation sequence with SAP's
+          <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/main/week3/unit7.md">openSAP draft exercise</a>
+          while keeping your Sales Order names and current OData V4 contract.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Ask your teaching agent to review the generated draft-table shapes,
+          BDEF changes, and concurrency evidence before the retrieval check.
+          After a pass, the next lesson should derive Item net amounts and the
+          Request total with determinations.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

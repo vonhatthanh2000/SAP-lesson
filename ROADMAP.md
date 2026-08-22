@@ -80,7 +80,7 @@ The one-month core targets RAP, operational CDS/Fiori, and selected ABAP/BTP pre
 | Day | Core work | Evidence |
 |---|---|---|
 | 8 | Complete [Lesson 6: Enable Managed CRUD](./lessons/0006-enable-managed-crud.html) for header and Items. Explain transactional buffer versus database state. | Behavior contract, CRUD evidence, and lifecycle diagram |
-| 9 | Add draft, lock, ETag, numbering, and administrative behavior. Test two-user/stale-update scenarios where possible. | Draft demo and concurrency notes |
+| 9 | Complete [Lesson 7: Protect Edits with Draft and ETags](./lessons/0007-protect-edits-with-draft-and-etags.html). Test two-user and stale-update scenarios where possible. | Draft demo and concurrency notes |
 | 10 | Implement determinations for derived values such as item net amount and order total. | Before/after tests and rule-placement rationale |
 | 11 | Implement validations for dates, quantities, currency consistency, and status transitions. | Message behavior and negative-path test matrix |
 | 12 | Add actions such as `Submit`, `Release`, and `PutOnHold`. Encode status invariants. | Action contract, authorization expectations, tests |
