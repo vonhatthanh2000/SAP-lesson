@@ -21,6 +21,8 @@ First transactional lesson: [Lesson 6 — Enable Managed CRUD](./lessons/0006-en
 
 Concurrency lesson: [Lesson 7 — Protect Edits with Draft and ETags](./lessons/0007-protect-edits-with-draft-and-etags.html). Begin it only after Lesson 6 root CRUD, Item create-by-association, and managed-numbering evidence pass.
 
+Business-logic lesson: [Lesson 8 — Derive Amounts with Determinations](./lessons/0008-derive-amounts-with-determinations.html). Begin it only after Lesson 7 draft lifecycle and concurrency evidence pass.
+
 ## Course documents
 
 - [Mission](./MISSION.md) — the outcome every lesson must serve.

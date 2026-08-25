@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 8 — Derive Amounts with Determinations</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 8 · 90–120 minutes · Determinations and local EML</div>
+        <h1>Make derived amounts belong to the business object</h1>
+        <p class="lede">
+          Calculate each Item's net amount and the Request's aggregate total
+          whenever quantity, price, or Item membership changes. Keep the rule
+          inside the base BO so every UI, API, and EML consumer gets the same
+          result.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite gate</h2>
+        <div class="callout">
+          <p>
+            Start only after Lesson 7 passes: the draft-enabled Request and
+            Item BDEFs activate, a draft can be resumed and activated, and
+            ETags protect stale changes.
+          </p>
+        </div>
+        <ul class="checklist">
+          <li>Use disposable Requests and Items for calculation tests.</li>
+          <li>Keep the complete Lesson 7 mappings and administrative fields.</li>
+          <li>Confirm the Item contains <code>RequestUUID</code>, <code>RequestedQuantity</code>, <code>UnitPrice</code>, <code>NetAmount</code>, and <code>TransactionCurrency</code>.</li>
+          <li>Confirm the root contains <code>TotalAmount</code> and <code>TransactionCurrency</code>.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>The tangible win</h2>
+        <div class="callout success">
+          <p>
+            Enter quantity 3 and unit price 25.00. RAP derives Item
+            <code>NetAmount = 75.00</code> and recalculates the Request total.
+            Change the quantity, add another Item, and delete an Item; the
+            aggregate total follows the draft state without consumer-supplied
+            totals.
+          </p>
+        </div>
+        <p>
+          This lesson derives values. It does not yet reject zero quantities,
+          missing products, invalid status transitions, or submission without
+          Items. Those are validation rules in Lesson 9.
+        </p>
+      </section>
+
+      <section>
+        <h2>Choose the correct rule mechanism</h2>
+        <table>
+          <thead><tr><th>Question</th><th>Mechanism</th><th>Sales Order example</th></tr></thead>
+          <tbody>
+            <tr><td>Should RAP derive or change data automatically?</td><td>Determination</td><td>Calculate <code>NetAmount</code> and <code>TotalAmount</code>.</td></tr>
+            <tr><td>Should inconsistent data be rejected with a message?</td><td>Validation</td><td>Reject quantity less than or equal to zero.</td></tr>
+            <tr><td>Did the user explicitly request a business transition?</td><td>Action</td><td>Submit or release a Request.</td></tr>
+            <tr><td>Should a field or operation be available for this instance?</td><td>Feature control</td><td>Disable Item edits after submission.</td></tr>
+            <tr><td>Should Fiori reread affected values immediately?</td><td>Side effect</td><td>Refresh the root total after an Item change.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          A determination owns the formula. A side effect does not calculate
+          anything; it tells a UI when to request the already-calculated value
+          again.
+        </p>
+      </section>
+
+      <section>
+        <h2>Predict the runtime before coding</h2>
+        <div class="flow" aria-label="Amount determination flow">
+          <span>Item create/change/delete</span><i>→</i
+          ><span>deriveAmounts</span><i>→</i
+          ><span>Item NetAmount</span><i>→</i
+          ><span>internal recalculateTotal</span><i>→</i
+          ><span>Request TotalAmount</span>
+        </div>
+        <ol>
+          <li>The consumer changes determining fields, never the derived fields.</li>
+          <li>RAP invokes the Item determination in the interaction phase.</li>
+          <li>The handler reads current transactional state with local EML.</li>
+          <li>For Items that still exist, it derives net amount and currency.</li>
+          <li>It invokes one private root operation for every affected Request.</li>
+          <li>The root operation reads all remaining Items and writes the sum.</li>
+          <li>Save or draft activation persists the consistent buffer state.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Step 1 — Preserve parent identity on delete</h2>
+        <p>
+          Make <code>RequestUUID</code> part of the Item CDS business key as
+          well as <code>ItemUUID</code>. Keep the to-parent association on that
+          field. The exact source syntax depends on your current entity, but
+          the exposed key shape must be equivalent to:
+        </p>
+        <pre><code>define view entity ZI_SalesOrderItem
+  as select from zsor_item as Item
+  association to parent ZI_SalesOrderRequest as _SalesOrderRequest
+    on $projection.RequestUUID = _SalesOrderRequest.RequestUUID
+{
+  key Item.request_uuid as RequestUUID,
+  key Item.item_uuid    as ItemUUID,
+      // existing Item fields and associations
+}</code></pre>
+        <p>
+          Project both fields as keys in <code>ZC_SalesOrderItem</code>. The
+          globally unique Item UUID still identifies the Item, but carrying the
+          parent UUID in the RAP key means a delete trigger can identify its
+          affected root even after the Item is absent from the buffer.
+        </p>
+        <div class="callout">
+          <p>
+            This changes the draft entity key. Let ADT regenerate the
+            disposable Item draft-table definition from the activated CDS
+            shape, inspect the proposed change, and recreate test drafts. Do
+            not hand-edit or query draft tables. In a real deployed system,
+            changing a BO key requires an explicit compatibility and data
+            migration decision.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 2 — Declare one deterministic orchestration</h2>
+        <p>
+          Merge these declarations into the Lesson 7 base BDEF. Preserve all
+          draft, ETag, mapping, association, and administrative declarations.
+        </p>
+        <pre><code>define behavior for ZI_SalesOrderRequest alias SalesOrderRequest
+  // keep Lesson 7 header
+{
+  // keep Lesson 7 operations, draft actions, fields, and mapping
+
+  internal action recalculateTotal;
+
+  field ( mandatory : create, readonly : update ) TransactionCurrency;
+  field ( readonly ) TotalAmount;
+}
+
+define behavior for ZI_SalesOrderItem alias SalesOrderItem
+  // keep Lesson 7 header
+{
+  // keep Lesson 7 operations, association, fields, and mapping
+
+  field ( numbering : managed, readonly ) ItemUUID;
+  field ( readonly ) RequestUUID, NetAmount, TransactionCurrency;
+  field ( mandatory : create ) Product, RequestedQuantity,
+                               QuantityUnit, UnitPrice;
+
+  determination deriveAmounts on modify
+    { create; delete; field RequestedQuantity, UnitPrice; }
+}</code></pre>
+        <p>
+          The Item currency is derived from its Request and cannot drift from
+          the aggregate currency. The root currency is fixed after creation;
+          changing it later would require an explicit repricing/conversion
+          policy rather than silently relabeling stored amounts.
+        </p>
+        <p>
+          Do not split net and total calculation into two determinations with
+          the same triggers. RAP does not guarantee determination execution
+          order. One orchestration first updates Item amounts and then calls
+          the root recalculation, so the total cannot accidentally read the
+          old net amount.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 3 — Generate handler method signatures</h2>
+        <ol>
+          <li>Activate the BDEF far enough for ADT to report the missing implementations.</li>
+          <li>Use Quick Fix on <code>recalculateTotal</code> and <code>deriveAmounts</code>.</li>
+          <li>Generate both methods in the existing Lesson 7 behavior pool.</li>
+          <li>Do not type the derived method signatures from memory.</li>
+        </ol>
+        <p>The generated declarations should express these contracts:</p>
+        <pre><code>METHODS recalculateTotal FOR MODIFY
+  IMPORTING keys FOR ACTION SalesOrderRequest~recalculateTotal.
+
+METHODS deriveAmounts FOR DETERMINE ON MODIFY
+  IMPORTING keys FOR SalesOrderItem~deriveAmounts.</code></pre>
+        <p>
+          Depending on how ADT organized your behavior pool, the methods may
+          be in separate local handler classes for root and child. That is
+          normal; the BDEF remains the contract.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 4 — Derive Item values, then invoke the root operation</h2>
+        <p>
+          Implement <code>deriveAmounts</code> using the structure below. Let
+          ADT completion resolve your release's generated table types and
+          component spelling.
+        </p>
+        <pre><code>METHOD deriveAmounts.
+  " Read only Items that still exist after the triggering modification.
+  READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderItem
+      FIELDS ( RequestedQuantity UnitPrice NetAmount
+               TransactionCurrency RequestUUID )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(items).
+
+  " Parent keys remain available for create, update, and delete because
+  " RequestUUID is part of the Item business key.
+  DATA(request_keys) = VALUE TABLE FOR ACTION IMPORT
+    ZI_SalesOrderRequest~recalculateTotal(
+      FOR key IN keys
+      ( RequestUUID = key-RequestUUID
+        %is_draft   = key-%is_draft ) ).
+
+  SORT request_keys BY RequestUUID %is_draft.
+  DELETE ADJACENT DUPLICATES FROM request_keys
+    COMPARING RequestUUID %is_draft.
+
+  READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderRequest
+      FIELDS ( TransactionCurrency )
+      WITH CORRESPONDING #( request_keys )
+      RESULT DATA(requests).
+
+  LOOP AT items ASSIGNING FIELD-SYMBOL(&lt;item&gt;).
+    ASSIGN requests[
+      RequestUUID = &lt;item&gt;-RequestUUID
+      %is_draft   = &lt;item&gt;-%is_draft ] TO FIELD-SYMBOL(&lt;request&gt;).
+    IF sy-subrc &lt;&gt; 0.
+      CONTINUE.
+    ENDIF.
+
+    &lt;item&gt;-TransactionCurrency = &lt;request&gt;-TransactionCurrency.
+    &lt;item&gt;-NetAmount =
+      &lt;item&gt;-RequestedQuantity * &lt;item&gt;-UnitPrice.
+  ENDLOOP.
+
+  IF items IS NOT INITIAL.
+    MODIFY ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+      ENTITY SalesOrderItem
+        UPDATE FIELDS ( NetAmount TransactionCurrency )
+        WITH CORRESPONDING #( items )
+      REPORTED DATA(item_reported).
+  ENDIF.
+
+  MODIFY ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderRequest
+      EXECUTE recalculateTotal
+      FROM request_keys
+    REPORTED DATA(total_reported).
+
+  reported = CORRESPONDING #( DEEP item_reported ).
+  reported = CORRESPONDING #( DEEP BASE ( reported ) total_reported ).
+ENDMETHOD.</code></pre>
+        <div class="callout">
+          <p>
+            Treat this as a guided implementation shape, not blind paste.
+            Generated EML derived-type syntax can differ by ABAP release. Keep
+            the algorithm invariant: read current Items → derive fields →
+            update locally → invoke each affected root once.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 5 — Sum the current aggregate state</h2>
+        <p>
+          Implement the private root action. It must read through the root
+          composition so it sees the current draft/transactional state, not a
+          stale SQL snapshot.
+        </p>
+        <pre><code>METHOD recalculateTotal.
+  READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderRequest
+      FIELDS ( TotalAmount )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(requests)
+    ENTITY SalesOrderRequest BY \_Items
+      FIELDS ( NetAmount )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(items)
+      LINK DATA(item_links).
+
+  LOOP AT requests ASSIGNING FIELD-SYMBOL(&lt;request&gt;).
+    CLEAR &lt;request&gt;-TotalAmount.
+
+    LOOP AT item_links ASSIGNING FIELD-SYMBOL(&lt;link&gt;)
+      WHERE source-%tky = &lt;request&gt;-%tky.
+      ASSIGN items[ KEY entity
+        %tky = &lt;link&gt;-target-%tky ] TO FIELD-SYMBOL(&lt;item&gt;).
+      IF sy-subrc = 0.
+        &lt;request&gt;-TotalAmount += &lt;item&gt;-NetAmount.
+      ENDIF.
+    ENDLOOP.
+  ENDLOOP.
+
+  MODIFY ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderRequest
+      UPDATE FIELDS ( TotalAmount )
+      WITH CORRESPONDING #( requests )
+    REPORTED DATA(update_reported).
+
+  reported = CORRESPONDING #( DEEP update_reported ).
+ENDMETHOD.</code></pre>
+        <p>
+          Starting from zero makes the operation idempotent: running it twice
+          against the same Item state produces the same total. The action is
+          <code>internal</code>, so it is reusable inside the BO but is not a
+          public consumer operation and is not projected.
+        </p>
+      </section>
+
+      <section>
+        <h2>Why <code>IN LOCAL MODE</code> is essential here</h2>
+        <table>
+          <thead><tr><th>Property</th><th>Consequence in this handler</th></tr></thead>
+          <tbody>
+            <tr><td>Reads the BO's current transactional state</td><td>The calculation includes unsaved draft Item changes.</td></tr>
+            <tr><td>Uses the base BO contract</td><td>The behavior pool is not coupled to one projection or OData service.</td></tr>
+            <tr><td>Allows implementation-internal updates</td><td>RAP can write fields that are read-only to external consumers.</td></tr>
+            <tr><td>Does not perform a commit</td><td>The outer RAP transaction still owns save or rollback.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Local mode is not permission to bypass business consistency
+          casually. Use it inside trusted BO implementation code for the
+          object's own derived state; never issue <code>COMMIT WORK</code> from
+          the handler.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 6 — Activate from the model inward</h2>
+        <ol>
+          <li>Activate the changed Item interface entity and projection.</li>
+          <li>Regenerate or adjust the disposable Item draft table through ADT and activate it.</li>
+          <li>Activate the base BDEF.</li>
+          <li>Generate, implement, and activate the behavior pool methods.</li>
+          <li>Activate the behavior projection; do not project the internal action.</li>
+          <li>Refresh or republish the OData V4 UI binding as required.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Step 7 — Prove all four trigger paths</h2>
+        <table>
+          <thead><tr><th>Test</th><th>Input/change</th><th>Expected draft state</th></tr></thead>
+          <tbody>
+            <tr><td>Create Item</td><td>Quantity 3, unit price 25.00</td><td>Item net 75.00; root total increases by 75.00.</td></tr>
+            <tr><td>Update quantity</td><td>Change 3 to 4</td><td>Item net becomes 100.00; root total changes by +25.00.</td></tr>
+            <tr><td>Update price</td><td>Change 25.00 to 20.00</td><td>Item net becomes 80.00; root total is recomputed, not incrementally guessed.</td></tr>
+            <tr><td>Add second Item</td><td>Quantity 2, unit price 10.00</td><td>Second net is 20.00; root total includes both Items.</td></tr>
+            <tr><td>Delete Item</td><td>Delete the second Item</td><td>The action sums remaining Items; root total falls by 20.00.</td></tr>
+            <tr><td>Discard draft</td><td>Discard all changes</td><td>Active Item and Request amounts remain unchanged.</td></tr>
+            <tr><td>Activate draft</td><td>Repeat and activate</td><td>Derived amounts persist with the accepted active state.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Record the Item values, root total, and draft/active state before and
+          after each operation. If delete leaves a stale total, first verify
+          that <code>RequestUUID</code> is part of the Item key and that
+          <code>delete</code> is a determination trigger.
+        </p>
+      </section>
+
+      <section>
+        <h2>Expected UI behavior before the side-effect lesson</h2>
+        <p>
+          The transactional state can be correct while the object-page header
+          still displays an old total. A draft-enabled Fiori client does not
+          reread every field after every input change. Use save, navigation,
+          or manual refresh to verify the backend value in this lesson. A
+          later side-effect lesson will make Item changes cause the root total
+          to be requested immediately.
+        </p>
+        <div class="callout">
+          <p>
+            Do not “fix” a stale display by moving the formula into UI code.
+            First prove the buffer value through RAP, then separately teach the
+            UI which affected property to reread.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Troubleshooting guide</h2>
+        <table>
+          <thead><tr><th>Symptom</th><th>Inspect first</th><th>Likely cause</th></tr></thead>
+          <tbody>
+            <tr><td>Net amount never changes</td><td>Determination trigger fields and generated method</td><td>The BDEF declaration is missing or the behavior pool is inactive.</td></tr>
+            <tr><td>Total uses the old net amount</td><td>Number and order of determinations</td><td>Net and total were split into independent handlers with the same trigger.</td></tr>
+            <tr><td>Delete leaves the old total</td><td>Item key and <code>delete</code> trigger</td><td>The deleted Item no longer provides enough parent identity.</td></tr>
+            <tr><td>Handler reads persisted values only</td><td>EML target and <code>IN LOCAL MODE</code></td><td>The code bypassed the current RAP buffer or used SQL.</td></tr>
+            <tr><td>Recursive repeated calculation</td><td>Trigger fields</td><td>A determined output such as <code>NetAmount</code> was also declared as its own trigger.</td></tr>
+            <tr><td>Currency differs between Item and Request</td><td>Item field control and parent read</td><td>The consumer still supplies Item currency instead of deriving it.</td></tr>
+            <tr><td>Backend total is correct but UI looks stale</td><td>Network rereads/manual refresh</td><td>The later RAP side effect is not declared yet.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Interview retrieval</h2>
+        <div class="interview-target">
+          <p>
+            Primary target from the
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s4">RAP interview section</a>:
+          </p>
+          <p><span class="interview-id">RAP D6</span></p>
+        </div>
+        <p>Close ADT and answer one question at a time:</p>
+        <ul class="checklist">
+          <li>What is a determination, and why do these amount rules belong there?</li>
+          <li>How does a determination differ from a validation?</li>
+          <li>Why are <code>NetAmount</code>, <code>TotalAmount</code>, and Item currency read-only to consumers?</li>
+          <li>Why is this an <code>on modify</code> determination instead of <code>on save</code>?</li>
+          <li>Why did you combine Item derivation and root recalculation into one orchestration?</li>
+          <li>How does the handler find the affected root after an Item is deleted?</li>
+          <li>What does <code>IN LOCAL MODE</code> contribute, and what does it not do?</li>
+          <li>Why must a determination be idempotent?</li>
+          <li>Why can correct backend state still appear stale in Fiori elements?</li>
+        </ul>
+        <p class="answer-frame">
+          Structure each answer as: business invariant → trigger → buffer
+          operations → save/UI consequence → code evidence.
+        </p>
+        <p>
+          <strong>Pass condition:</strong> demonstrate create, quantity change,
+          price change, second-Item creation, Item deletion, draft discard, and
+          activation; show that consumers cannot enter derived fields; then
+          answer all nine questions without notes.
+        </p>
+      </section>
+
+      <section>
+        <h2>Primary sources</h2>
+        <p>
+          Verify the model against SAP Help's
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/determinations">Determinations</a>,
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/determination-implementation">Determination Implementation</a>, and
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/b30b48c58ed94ff786980ab9aa18882f.html">RAP Side Effects</a>.
+          Compare the child-to-root local-EML pattern with SAP's
+          <a href="https://github.com/SAP-samples/abap-platform-rap-opensap/blob/main/week3/unit6.md">openSAP behavior implementation exercise</a>
+          and the current
+          <a href="https://github.com/SAP-samples/abap-platform-rap110/blob/main/exercises/ex03/README.md">RAP110 determination exercise</a>.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Ask your teaching agent to review the BDEF triggers, handler
+          algorithm, delete-path evidence, and retrieval answers. After a pass,
+          Lesson 9 should reject invalid quantities, missing references,
+          currency inconsistencies, invalid dates, and illegal status changes
+          with RAP validations and messages.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
