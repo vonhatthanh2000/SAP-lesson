@@ -23,6 +23,8 @@ Concurrency lesson: [Lesson 7 — Protect Edits with Draft and ETags](./lessons/
 
 Business-logic lesson: [Lesson 8 — Derive Amounts with Determinations](./lessons/0008-derive-amounts-with-determinations.html). Begin it only after Lesson 7 draft lifecycle and concurrency evidence pass.
 
+Save-invariant lesson: [Lesson 9 — Reject Inconsistent Saves with Validations](./lessons/0009-reject-inconsistent-saves-with-validations.html). Begin it only after Lesson 8 derives Item and Request amounts for create, update, and delete paths.
+
 ## Course documents
 
 - [Mission](./MISSION.md) — the outcome every lesson must serve.

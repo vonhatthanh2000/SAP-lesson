@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 9 — Reject Inconsistent Saves with Validations</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 9 · 120–150 minutes · Validations and messages</div>
+        <h1>Let drafts be incomplete, but never activate invalid business data</h1>
+        <p class="lede">
+          Check Customer and Product references, reject non-positive Item
+          quantities, and return field-specific messages. Learn how
+          <code>Prepare</code>, <code>failed</code>, <code>reported</code>, and
+          state areas turn a business invariant into a safe draft activation.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite gate</h2>
+        <div class="callout">
+          <p>
+            Start only after Lesson 8 passes: quantity and unit-price changes
+            derive Item net amounts, Item create/delete recalculates the root
+            total, and draft discard/activation preserves the correct state.
+          </p>
+        </div>
+        <ul class="checklist">
+          <li><code>ZI_CustomerReference</code> exposes <code>CustomerID</code>.</li>
+          <li><code>ZI_ProductReference</code> exposes <code>ProductID</code>.</li>
+          <li>Customer and Product lookup entities are readable in your ABAP release.</li>
+          <li>The root draft <code>Prepare</code> action already exists from Lesson 7.</li>
+          <li>Use disposable draft data for every negative-path test.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>The tangible win</h2>
+        <div class="callout success">
+          <p>
+            Keep an incomplete or invalid Request as a draft, but prevent it
+            from becoming active. Enter quantity zero, an unknown Product, or
+            an unknown Customer; activation fails, Fiori highlights the
+            responsible field, and the active database state remains
+            unchanged. Correct the value and activate successfully.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Business flow before code</h2>
+        <div class="flow" aria-label="Draft validation flow">
+          <span>User edits draft</span><i>→</i
+          ><span>Draft can hold incomplete data</span><i>→ Activate →</i
+          ><span>Prepare runs validations</span><i>→</i
+          ><span>Failed or accepted</span>
+        </div>
+        <table>
+          <thead><tr><th>Moment</th><th>Business meaning</th><th>RAP consequence</th></tr></thead>
+          <tbody>
+            <tr><td>Enter quantity 0</td><td>The user may still be completing the line.</td><td>The draft may retain the temporary value.</td></tr>
+            <tr><td>Choose Save/Activate</td><td>The user asks to make the Request official.</td><td><code>Activate</code> invokes <code>Prepare</code> before moving draft state to active state.</td></tr>
+            <tr><td>Validation reads quantity</td><td>The BO evaluates its invariant against current draft state.</td><td>Local EML reads the draft/transactional instance identified by <code>%tky</code>.</td></tr>
+            <tr><td>Quantity is invalid</td><td>The Item is not acceptable business data.</td><td>The Item key goes to <code>failed</code>; a field message goes to <code>reported</code>.</td></tr>
+            <tr><td>Activation is rejected</td><td>No partial or inconsistent order becomes official.</td><td>Active persistence remains unchanged; the draft remains available for correction.</td></tr>
+            <tr><td>User enters quantity 2</td><td>The Item now satisfies the invariant.</td><td>The state-area message is cleared; the next activation can continue.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Four concepts that must stay separate</h2>
+        <table>
+          <thead><tr><th>Mechanism</th><th>Question</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td><code>mandatory : create</code></td><td>Did the create request provide this field?</td><td>Quantity must be supplied when an Item is created.</td></tr>
+            <tr><td>Value help with validation use</td><td>Can this consumer select/check a value from the lookup provider?</td><td>Fiori offers known Products.</td></tr>
+            <tr><td>Validation</td><td>Is the entire BO state acceptable to save, regardless of consumer?</td><td>Quantity must be positive and Product must exist.</td></tr>
+            <tr><td>Precheck</td><td>Must an incoming modification be rejected before it reaches the buffer?</td><td>Block a change that must never enter transactional state.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          This lesson uses validations because incomplete draft data is useful
+          while the user works, but invalid data must not become active.
+        </p>
+      </section>
+
+      <section>
+        <h2>The rules and their owners</h2>
+        <table>
+          <thead><tr><th>Invariant</th><th>Owning entity</th><th>Trigger</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td><code>SoldToParty</code> references an existing Customer</td><td>Request</td><td>Create or Customer change</td><td>The root owns the buyer relationship.</td></tr>
+            <tr><td><code>Product</code> references an existing Product</td><td>Item</td><td>Create or Product change</td><td>Product is an Item-level reference.</td></tr>
+            <tr><td><code>RequestedQuantity &gt; 0</code></td><td>Item</td><td>Create or quantity change</td><td>The Item owns its requested quantity.</td></tr>
+            <tr><td>Requested delivery date is not in the past</td><td>Request</td><td>Create or date change</td><td>Optional extension if this field exists in your model.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <p>
+            Do not add a redundant Item-currency validation: Lesson 8 makes
+            Item currency read-only and derives it from the root. Illegal
+            status transitions are deferred until the Submit action exists;
+            then the action and a save invariant can be tested together.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 1 — Declare the validations</h2>
+        <p>
+          Merge these lines into the Lesson 8 base BDEF. Preserve all existing
+          operations, draft actions, determinations, fields, associations,
+          ETags, and mappings.
+        </p>
+        <pre><code>define behavior for ZI_SalesOrderRequest alias SalesOrderRequest
+  // keep the existing Lesson 8 header
+{
+  validation validateCustomer on save
+    { create; field SoldToParty; }
+
+  draft determine action Prepare
+  {
+    validation validateCustomer;
+    validation SalesOrderItem~validateProduct;
+    validation SalesOrderItem~validateQuantity;
+  }
+
+  // keep actions, determination, fields, association, and mapping
+}
+
+define behavior for ZI_SalesOrderItem alias SalesOrderItem
+  // keep the existing Lesson 8 header
+{
+  validation validateProduct on save
+    { create; field Product; }
+
+  validation validateQuantity on save
+    { create; field RequestedQuantity; }
+
+  // keep determination, fields, association, and mapping
+}</code></pre>
+        <p>
+          A validation is always <code>on save</code>. Its trigger declaration
+          records which changes make the previous validation result obsolete.
+          Because this BO uses draft, root <code>Prepare</code> explicitly
+          includes both root and child validations.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 2 — Let ADT generate the method contracts</h2>
+        <ol>
+          <li>Save the BDEF and use Quick Fix on each missing implementation.</li>
+          <li>Generate methods in the existing behavior pool.</li>
+          <li>Do not type the RAP-derived signatures manually.</li>
+        </ol>
+        <pre><code>METHODS validateCustomer FOR VALIDATE ON SAVE
+  IMPORTING keys FOR SalesOrderRequest~validateCustomer.
+
+METHODS validateProduct FOR VALIDATE ON SAVE
+  IMPORTING keys FOR SalesOrderItem~validateProduct.
+
+METHODS validateQuantity FOR VALIDATE ON SAVE
+  IMPORTING keys FOR SalesOrderItem~validateQuantity.</code></pre>
+        <p>
+          ADT may place root and child methods in different local handler
+          classes. That changes class organization, not the business flow.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 3 — Implement the smallest rule first: positive quantity</h2>
+        <p class="answer-frame">
+          Business flow: read current Items → clear the old quantity-message
+          state → find invalid quantities → fail those Items → report an error
+          attached to <code>RequestedQuantity</code>.
+        </p>
+        <pre><code>METHOD validateQuantity.
+  " 1. Read current draft/active Item values for the triggered keys
+  READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderItem
+      FIELDS ( RequestedQuantity )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(items).
+
+  LOOP AT items INTO DATA(item).
+    " 2. Clear an older state message from this same validation area
+    APPEND VALUE #(
+      %tky        = item-%tky
+      %state_area = 'VALIDATE_QUANTITY'
+    ) TO reported-SalesOrderItem.
+
+    " 3. Check the business invariant
+    IF item-RequestedQuantity &lt;= 0.
+      " 4. FAILED controls the save result
+      APPEND VALUE #(
+        %tky = item-%tky
+      ) TO failed-SalesOrderItem.
+
+      " 5. REPORTED explains the failure to the consumer
+      APPEND VALUE #(
+        %tky        = item-%tky
+        %state_area = 'VALIDATE_QUANTITY'
+        %msg        = new_message_with_text(
+          severity = if_abap_behv_message=&gt;severity-error
+          text     = 'Requested quantity must be greater than zero' )
+        %element-RequestedQuantity = if_abap_behv=&gt;mk-on
+      ) TO reported-SalesOrderItem.
+    ENDIF.
+  ENDLOOP.
+ENDMETHOD.</code></pre>
+      </section>
+
+      <section>
+        <h2>Read the quantity code as business behavior</h2>
+        <table>
+          <thead><tr><th>Code</th><th>Logic meaning</th><th>Business/UI effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>READ ENTITIES ... IN LOCAL MODE</code></td><td>Read the current BO state for the requested keys.</td><td>The check sees the quantity currently stored in the draft, not only active SQL data.</td></tr>
+            <tr><td><code>item-%tky</code></td><td>Carry the complete transactional key, including draft identity.</td><td>The message binds to the correct active/draft Item.</td></tr>
+            <tr><td>State-area-only row</td><td>Replace the prior result owned by <code>VALIDATE_QUANTITY</code>.</td><td>Correcting quantity clears the old error instead of leaving a stale message.</td></tr>
+            <tr><td><code>failed-SalesOrderItem</code></td><td>Mark this Item inconsistent.</td><td>Activation/save is rejected; the aggregate is not partially persisted.</td></tr>
+            <tr><td><code>reported-SalesOrderItem</code></td><td>Return an instance-bound message.</td><td>The consumer learns what must be corrected.</td></tr>
+            <tr><td><code>%element-RequestedQuantity</code></td><td>Associate the message with one field.</td><td>Fiori can highlight the quantity field.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <p>
+            A message alone is not the rejection. <code>failed</code> blocks
+            persistence; <code>reported</code> communicates why. Fill both for
+            an error that must reject save.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 4 — Validate the root Customer reference</h2>
+        <p class="answer-frame">
+          Business flow: read every affected Request → collect its Customer
+          IDs → query the reusable Customer reference CDS once → reject missing
+          or unknown buyers.
+        </p>
+        <pre><code>METHOD validateCustomer.
+  READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderRequest
+      FIELDS ( SoldToParty )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(requests).
+
+  IF requests IS NOT INITIAL.
+    SELECT FROM ZI_CustomerReference
+      FIELDS CustomerID
+      FOR ALL ENTRIES IN @requests
+      WHERE CustomerID = @requests-SoldToParty
+      INTO TABLE @DATA(valid_customers).
+  ENDIF.
+
+  LOOP AT requests INTO DATA(request).
+    APPEND VALUE #(
+      %tky        = request-%tky
+      %state_area = 'VALIDATE_CUSTOMER'
+    ) TO reported-SalesOrderRequest.
+
+    IF request-SoldToParty IS INITIAL OR
+       NOT line_exists(
+         valid_customers[ CustomerID = request-SoldToParty ] ).
+
+      APPEND VALUE #(
+        %tky = request-%tky
+      ) TO failed-SalesOrderRequest.
+
+      APPEND VALUE #(
+        %tky        = request-%tky
+        %state_area = 'VALIDATE_CUSTOMER'
+        %msg        = new_message_with_text(
+          severity = if_abap_behv_message=&gt;severity-error
+          text     = |Customer { request-SoldToParty } does not exist| )
+        %element-SoldToParty = if_abap_behv=&gt;mk-on
+      ) TO reported-SalesOrderRequest.
+    ENDIF.
+  ENDLOOP.
+ENDMETHOD.</code></pre>
+        <p>
+          The guard <code>IF requests IS NOT INITIAL</code> is required before
+          <code>FOR ALL ENTRIES</code>. Querying once for all requested IDs
+          avoids a database lookup inside every loop iteration. If your lookup
+          entity or released field names differ, use ADT completion and adjust
+          only the provider names—not the validation flow.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 5 — Apply the same flow to Product</h2>
+        <p>
+          Product validation belongs to the Item handler, but the algorithm is
+          the same as Customer validation.
+        </p>
+        <pre><code>METHOD validateProduct.
+  READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderItem
+      FIELDS ( Product )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(items).
+
+  IF items IS NOT INITIAL.
+    SELECT FROM ZI_ProductReference
+      FIELDS ProductID
+      FOR ALL ENTRIES IN @items
+      WHERE ProductID = @items-Product
+      INTO TABLE @DATA(valid_products).
+  ENDIF.
+
+  LOOP AT items INTO DATA(item).
+    APPEND VALUE #(
+      %tky        = item-%tky
+      %state_area = 'VALIDATE_PRODUCT'
+    ) TO reported-SalesOrderItem.
+
+    IF item-Product IS INITIAL OR
+       NOT line_exists( valid_products[ ProductID = item-Product ] ).
+
+      APPEND VALUE #( %tky = item-%tky )
+        TO failed-SalesOrderItem.
+
+      APPEND VALUE #(
+        %tky        = item-%tky
+        %state_area = 'VALIDATE_PRODUCT'
+        %msg        = new_message_with_text(
+          severity = if_abap_behv_message=&gt;severity-error
+          text     = |Product { item-Product } does not exist| )
+        %element-Product = if_abap_behv=&gt;mk-on
+      ) TO reported-SalesOrderItem.
+    ENDIF.
+  ENDLOOP.
+ENDMETHOD.</code></pre>
+        <p>
+          Fiori value help improves entry, but this backend validation protects
+          OData API calls, EML callers, alternate projections, and clients that
+          never opened the value-help dialog.
+        </p>
+      </section>
+
+      <section>
+        <h2>Optional extension — Validate requested delivery date</h2>
+        <p>
+          Only do this step if <code>RequestedDeliveryDate</code> already exists
+          or you intentionally add it to persistence, interface CDS,
+          projection CDS, draft shape, mapping, and UI metadata. Do not paste a
+          validation for a field your BO does not contain.
+        </p>
+        <pre><code>// Root BDEF
+validation validateDeliveryDate on save
+  { create; field RequestedDeliveryDate; }
+
+draft determine action Prepare
+{
+  // keep the three core validations
+  validation validateDeliveryDate;
+}</code></pre>
+        <pre><code>METHOD validateDeliveryDate.
+  READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderRequest
+      FIELDS ( RequestedDeliveryDate )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(requests).
+
+  DATA(today) = cl_abap_context_info=&gt;get_system_date( ).
+
+  LOOP AT requests INTO DATA(request).
+    APPEND VALUE #(
+      %tky        = request-%tky
+      %state_area = 'VALIDATE_DELIVERY_DATE'
+    ) TO reported-SalesOrderRequest.
+
+    IF request-RequestedDeliveryDate IS INITIAL OR
+       request-RequestedDeliveryDate &lt; today.
+      APPEND VALUE #( %tky = request-%tky )
+        TO failed-SalesOrderRequest.
+
+      APPEND VALUE #(
+        %tky        = request-%tky
+        %state_area = 'VALIDATE_DELIVERY_DATE'
+        %msg        = new_message_with_text(
+          severity = if_abap_behv_message=&gt;severity-error
+          text     = 'Requested delivery date cannot be in the past' )
+        %element-RequestedDeliveryDate = if_abap_behv=&gt;mk-on
+      ) TO reported-SalesOrderRequest.
+    ENDIF.
+  ENDLOOP.
+ENDMETHOD.</code></pre>
+      </section>
+
+      <section>
+        <h2>What validation code must not do</h2>
+        <table>
+          <thead><tr><th>Do not</th><th>Reason</th><th>Use instead</th></tr></thead>
+          <tbody>
+            <tr><td>Correct quantity inside the validation</td><td>Validations must not execute EML modifications.</td><td>Reject it, or use a determination if automatic correction is genuinely the business rule.</td></tr>
+            <tr><td>Read draft tables with SQL</td><td>It bypasses RAP draft identity and administration.</td><td><code>READ ENTITIES ... IN LOCAL MODE</code>.</td></tr>
+            <tr><td>Only return an error message</td><td>A reported message does not itself identify the failed save instance.</td><td>Fill both <code>failed</code> and <code>reported</code>.</td></tr>
+            <tr><td>Depend on another validation running first</td><td>Validation execution order is not fixed.</td><td>Make every validation independently correct.</td></tr>
+            <tr><td>Use value help as the only protection</td><td>Not every consumer uses that UI contract.</td><td>Enforce the invariant in the base BO.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Step 6 — Activate and test the save boundary</h2>
+        <ol>
+          <li>Activate the base BDEF.</li>
+          <li>Generate and implement the three validation methods.</li>
+          <li>Activate the behavior pool and BDEF again.</li>
+          <li>Refresh the service metadata/application if required.</li>
+          <li>Create a new Request draft with a valid Customer.</li>
+          <li>Create an Item with a valid Product and quantity zero.</li>
+          <li>Confirm the draft can exist, then attempt activation.</li>
+          <li>Record the failed activation, message, highlighted field, and unchanged active data.</li>
+          <li>Correct quantity and activate successfully.</li>
+          <li>Repeat with unknown Customer and Product IDs.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Negative-path test matrix</h2>
+        <table>
+          <thead><tr><th>Scenario</th><th>Expected <code>failed</code></th><th>Expected message/evidence</th></tr></thead>
+          <tbody>
+            <tr><td>Quantity = 0</td><td>Item key</td><td>Error on <code>RequestedQuantity</code>; activation rejected.</td></tr>
+            <tr><td>Quantity &lt; 0</td><td>Item key</td><td>Same state area and field; active state unchanged.</td></tr>
+            <tr><td>Unknown Product</td><td>Item key</td><td>Error on <code>Product</code>.</td></tr>
+            <tr><td>Unknown Customer</td><td>Request key</td><td>Error on <code>SoldToParty</code>.</td></tr>
+            <tr><td>Two invalid Items</td><td>Both Item keys</td><td>Both problems reported; no partial aggregate activation.</td></tr>
+            <tr><td>Correct invalid value</td><td>Empty for corrected rule</td><td>Old state message disappears.</td></tr>
+            <tr><td>Valid Request and Items</td><td>Empty</td><td>Activation succeeds; determined amounts persist.</td></tr>
+            <tr><td>Past delivery date (optional)</td><td>Request key</td><td>Error on <code>RequestedDeliveryDate</code>.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Troubleshooting guide</h2>
+        <table>
+          <thead><tr><th>Symptom</th><th>Inspect first</th><th>Likely cause</th></tr></thead>
+          <tbody>
+            <tr><td>Validation never runs during activation</td><td>Root <code>Prepare</code></td><td>The validation was declared but not assigned to the draft determine action.</td></tr>
+            <tr><td>Message appears but save continues</td><td><code>failed-&lt;entity&gt;</code></td><td>Only <code>reported</code> was filled.</td></tr>
+            <tr><td>Save fails without useful explanation</td><td><code>reported</code> and <code>%msg</code></td><td>The key was failed without a consumer message.</td></tr>
+            <tr><td>Corrected value still shows old error</td><td>State-area clearing row</td><td>The validation did not replace its previous state message.</td></tr>
+            <tr><td>Message attaches to wrong draft/active instance</td><td><code>%tky</code></td><td>Only business keys were copied and draft identity was lost.</td></tr>
+            <tr><td>Valid Customer/Product rejected</td><td>Lookup CDS field format</td><td>Provider name, leading-zero conversion, or key representation differs.</td></tr>
+            <tr><td>Lookup select returns every row</td><td>Empty-table guard</td><td><code>FOR ALL ENTRIES</code> was executed without checking the source table.</td></tr>
+            <tr><td>Runtime rejects the handler</td><td>EML modifications inside validation</td><td>The implementation tried to change BO state from a read-only validation phase.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Interview retrieval</h2>
+        <div class="interview-target">
+          <p>
+            Primary targets from the
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s4">RAP interview section</a>:
+          </p>
+          <p>
+            <span class="interview-id">RAP D20</span>
+            <span class="interview-id">RAP D26</span>
+          </p>
+        </div>
+        <p>Close ADT and answer one question at a time:</p>
+        <ul class="checklist">
+          <li>What is a validation, and why is positive quantity a validation rather than a determination?</li>
+          <li>Why can an invalid draft exist while activation is rejected?</li>
+          <li>What does <code>Prepare</code> do in this draft-enabled BO?</li>
+          <li>What is the difference between <code>failed</code> and <code>reported</code>?</li>
+          <li>What is <code>mapped</code>, and why is it irrelevant inside these validation methods?</li>
+          <li>Why use <code>%tky</code> rather than only copying UUID fields?</li>
+          <li>Why does each validation first report its empty <code>%state_area</code>?</li>
+          <li>Why does value help not replace Product or Customer validation?</li>
+          <li>How does <code>mandatory : create</code> differ from a positive-quantity rule?</li>
+          <li>How does a precheck differ from this on-save validation?</li>
+          <li>Why must validation methods not modify BO data or depend on execution order?</li>
+          <li>Why do we not add a currency-consistency validation after Lesson 8?</li>
+        </ul>
+        <p class="answer-frame">
+          Structure each answer as: invariant → lifecycle moment → read/check →
+          failed/reported response → persistence and UI consequence.
+        </p>
+        <p>
+          <strong>Pass condition:</strong> demonstrate the complete quantity,
+          Product, and Customer negative paths; show that correction clears the
+          message and activation succeeds; then answer all twelve questions
+          without notes.
+        </p>
+      </section>
+
+      <section>
+        <h2>Primary sources</h2>
+        <p>
+          Verify the behavior against SAP Help's
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/validations">Validations</a>,
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/validation-implementation">Validation Implementation</a>,
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/draft-actions">Draft Actions</a>, and
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/determination-and-validation-modelling">Determination and Validation Modelling</a>.
+          Compare the message implementation with SAP's
+          <a href="https://github.com/SAP-samples/abap-platform-rap120/blob/main/exercises/ex04/README.md">RAP120 validation exercise</a>
+          and
+          <a href="https://github.com/SAP-samples/abap-platform-rap640/blob/main/exercises/ex3/README.md">RAP640 quantity/date example</a>.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Ask your teaching agent to review the trigger coverage,
+          <code>Prepare</code> assignments, state-message lifecycle, lookup
+          strategy, and negative-path evidence. After a pass, the next lesson
+          should implement explicit Submit, Release, and Put On Hold actions
+          with guarded status transitions.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>
