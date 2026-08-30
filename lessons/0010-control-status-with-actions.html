@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 10 — Control Status with RAP Actions</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 10 · 120–150 minutes · Actions and status invariants</div>
+        <h1>Turn status changes into explicit business commands</h1>
+        <p class="lede">
+          Replace direct status editing with guarded <code>Submit</code>,
+          <code>Release</code>, and <code>PutOnHold</code> instance actions.
+          Model legal transitions, reject illegal commands, update the RAP
+          buffer through local EML, and return the changed Request to every
+          consumer.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite gate</h2>
+        <div class="callout">
+          <p>
+            Start only after Lesson 9 passes: invalid Customer, Product, and
+            quantity values reject activation with field-specific messages,
+            while a corrected draft activates successfully.
+          </p>
+        </div>
+        <ul class="checklist">
+          <li>A valid Request with at least one valid Item can become active.</li>
+          <li><code>Status</code> exists on the root interface and projection entities.</li>
+          <li>The root behavior pool from Lessons 8–9 activates.</li>
+          <li>The OData V4 UI behavior projection is available for adding actions.</li>
+          <li>Use disposable active Requests for transition tests.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>The tangible win</h2>
+        <div class="callout success">
+          <p>
+            Activate a valid Open Request, submit it, release it, and prove
+            that an illegal transition—such as releasing an Open Request or
+            changing a Released Request—fails with a business message. The
+            consumer never enters a status code directly.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Technical draft state is not business status</h2>
+        <table>
+          <thead><tr><th>Concept</th><th>Meaning</th><th>Owner</th></tr></thead>
+          <tbody>
+            <tr><td>Draft/active</td><td>Whether the editable version is staged or official.</td><td>RAP draft runtime through <code>%is_draft</code>.</td></tr>
+            <tr><td>Open/Submitted/Released/On Hold</td><td>Where the Request is in its business process.</td><td>The Sales Order Request BO through <code>Status</code>.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          The portfolio workflow used here is: create and edit a draft,
+          activate it as an <strong>Open</strong> Request, then execute business
+          actions on the active instance. RAP actions can also target draft
+          instances when their transactional keys identify a draft, but keep
+          this first state-machine test on active data so the two lifecycles do
+          not become confused.
+        </p>
+      </section>
+
+      <section>
+        <h2>Define the state machine before writing ABAP</h2>
+        <div class="flow" aria-label="Request status state machine">
+          <span>Open</span><i>→ Submit →</i><span>Submitted</span
+          ><i>→ Release →</i><span>Released</span>
+        </div>
+        <div class="flow" aria-label="On-hold transitions">
+          <span>Open or Submitted</span><i>→ Put On Hold →</i
+          ><span>On Hold</span><i>→ Submit →</i><span>Submitted</span>
+        </div>
+        <table>
+          <thead><tr><th>Command</th><th>Allowed source</th><th>Target</th><th>Additional invariant</th></tr></thead>
+          <tbody>
+            <tr><td><code>Submit</code></td><td>Open or On Hold</td><td>Submitted</td><td>The Request contains at least one Item.</td></tr>
+            <tr><td><code>Release</code></td><td>Submitted</td><td>Released</td><td>Derived total is greater than zero.</td></tr>
+            <tr><td><code>PutOnHold</code></td><td>Open or Submitted</td><td>On Hold</td><td>Released is terminal in this lesson.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Lesson 9 already protects Customer, Product, and quantity during
+          activation. <code>Submit</code> owns the new cross-entity rule that a
+          Request must have at least one Item. Do not duplicate every existing
+          save validation inside every action.
+        </p>
+      </section>
+
+      <section>
+        <h2>Why an action rather than a normal field update?</h2>
+        <table>
+          <thead><tr><th>Direct status update</th><th>Business action</th></tr></thead>
+          <tbody>
+            <tr><td>Consumer sends an implementation code such as <code>S</code>.</td><td>Consumer requests the business command <code>Submit</code>.</td></tr>
+            <tr><td>Transition intent is implicit.</td><td>Intent is explicit and auditable.</td></tr>
+            <tr><td>Every consumer must understand legal transitions.</td><td>The base BO owns transition checks for every consumer.</td></tr>
+            <tr><td>Difficult to add command-specific checks.</td><td>Handler can check Items, totals, authorization, and return action-specific messages.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Step 1 — Define stable status constants</h2>
+        <p>
+          Add constants to the root local handler class. Use the actual type
+          and stored codes agreed for your project; do not scatter character
+          literals through action methods.
+        </p>
+        <pre><code>CONSTANTS:
+  BEGIN OF request_status,
+    open      TYPE c LENGTH 1 VALUE 'O',
+    submitted TYPE c LENGTH 1 VALUE 'S',
+    released  TYPE c LENGTH 1 VALUE 'R',
+    on_hold   TYPE c LENGTH 1 VALUE 'H',
+  END OF request_status.</code></pre>
+        <p>
+          In a production design, prefer an appropriate released domain/data
+          element or typed constant. The important idea is one canonical map
+          from meaningful names to persisted codes.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 2 — Make Status BO-owned and declare the commands</h2>
+        <p>Merge these declarations into the Lesson 9 root BDEF:</p>
+        <pre><code>define behavior for ZI_SalesOrderRequest alias SalesOrderRequest
+  // keep the existing managed/draft header
+{
+  field ( readonly ) Status;
+
+  determination setInitialStatus on modify { create; }
+
+  action Submit result [1] $self;
+  action Release result [1] $self;
+  action PutOnHold result [1] $self;
+
+  // keep CRUD, draft actions, validations, determinations,
+  // associations, fields, and mapping from earlier lessons
+}</code></pre>
+        <p>
+          These are instance actions by default: each incoming key identifies
+          a Request on which the command is executed. <code>result [1]
+          $self</code> promises one updated Request entity as the result for
+          each successful action instance.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 3 — Initialize every created Request as Open</h2>
+        <p>
+          This recalls Lesson 8's determination pattern. Because
+          <code>Status</code> is externally read-only, the BO assigns its
+          initial value automatically.
+        </p>
+        <pre><code>METHOD setInitialStatus.
+  MODIFY ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderRequest
+      UPDATE FIELDS ( Status )
+      WITH VALUE #(
+        FOR key IN keys
+        ( %tky   = key-%tky
+          Status = request_status-open )
+      ).
+ENDMETHOD.</code></pre>
+        <p>
+          This is a determination because initialization is automatic. Submit
+          and Release are actions because a business user explicitly requests
+          those transitions.
+        </p>
+      </section>
+
+      <section>
+        <h2>Step 4 — Generate action method contracts</h2>
+        <p>Use ADT Quick Fix rather than typing derived signatures manually:</p>
+        <pre><code>METHODS Submit FOR MODIFY
+  IMPORTING keys FOR ACTION SalesOrderRequest~Submit
+  RESULT result.
+
+METHODS Release FOR MODIFY
+  IMPORTING keys FOR ACTION SalesOrderRequest~Release
+  RESULT result.
+
+METHODS PutOnHold FOR MODIFY
+  IMPORTING keys FOR ACTION SalesOrderRequest~PutOnHold
+  RESULT result.</code></pre>
+        <p>
+          The generated action handler also receives implicit
+          <code>failed</code> and <code>reported</code> response structures.
+        </p>
+      </section>
+
+      <section>
+        <h2>Submit business flow</h2>
+        <div class="flow" aria-label="Submit action flow">
+          <span>Submit keys</span><i>→</i><span>Read status and Items</span
+          ><i>→</i><span>Guard transition</span><i>→</i
+          ><span>Update accepted keys</span><i>→</i><span>Return $self</span>
+        </div>
+        <ol>
+          <li>RAP supplies the transactional keys selected by the consumer.</li>
+          <li>The action reads current Request status and composition links.</li>
+          <li>Open/On Hold and at least one Item are required.</li>
+          <li>Illegal instances go to <code>failed</code> with a <code>reported</code> message.</li>
+          <li>Only accepted instances enter the local EML update table.</li>
+          <li>The method reads those updated instances and wraps each one in <code>%param</code> because the action returns <code>$self</code>.</li>
+          <li>RAP's outer transaction owns save or rollback; the handler never commits.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Step 5 — Implement Submit</h2>
+        <pre><code>METHOD Submit.
+  " 1. Read the current Requests and their Item links
+  READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderRequest
+      FIELDS ( Status )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(requests)
+    ENTITY SalesOrderRequest BY \_Items
+      FIELDS ( ItemUUID )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(items)
+      LINK DATA(item_links).
+
+  " 2. Collect only Requests that satisfy Submit invariants
+  DATA requests_to_update TYPE TABLE FOR UPDATE
+    ZI_SalesOrderRequest.
+
+  LOOP AT requests INTO DATA(request).
+    " Legal source-state check
+    IF request-Status &lt;&gt; request_status-open AND
+       request-Status &lt;&gt; request_status-on_hold.
+      APPEND VALUE #( %tky = request-%tky )
+        TO failed-SalesOrderRequest.
+      APPEND VALUE #(
+        %tky = request-%tky
+        %msg = new_message_with_text(
+          severity = if_abap_behv_message=&gt;severity-error
+          text = |Request cannot be submitted from status { request-Status }| )
+        %element-Status = if_abap_behv=&gt;mk-on
+      ) TO reported-SalesOrderRequest.
+      CONTINUE.
+    ENDIF.
+
+    " Cross-entity readiness check
+    IF NOT line_exists(
+      item_links[ source-%tky = request-%tky ] ).
+      APPEND VALUE #( %tky = request-%tky )
+        TO failed-SalesOrderRequest.
+      APPEND VALUE #(
+        %tky = request-%tky
+        %msg = new_message_with_text(
+          severity = if_abap_behv_message=&gt;severity-error
+          text = 'A Request must contain at least one Item before submission' )
+      ) TO reported-SalesOrderRequest.
+      CONTINUE.
+    ENDIF.
+
+    APPEND VALUE #(
+      %tky   = request-%tky
+      Status = request_status-submitted
+    ) TO requests_to_update.
+  ENDLOOP.
+
+  " 3. Apply only accepted transitions to the current BO transaction
+  IF requests_to_update IS NOT INITIAL.
+    MODIFY ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+      ENTITY SalesOrderRequest
+        UPDATE FIELDS ( Status )
+        WITH requests_to_update.
+
+    " 4. Read the changed state promised by result [1] $self
+    READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+      ENTITY SalesOrderRequest
+        ALL FIELDS
+        WITH CORRESPONDING #( requests_to_update )
+        RESULT DATA(updated_requests).
+
+    result = VALUE #(
+      FOR updated_request IN updated_requests
+      ( %tky   = updated_request-%tky
+        %param = updated_request )
+    ).
+  ENDIF.
+ENDMETHOD.</code></pre>
+        <div class="callout">
+          <p>
+            The <code>items</code> result is required by the read-by-association
+            operation even though this method only uses <code>item_links</code>
+            to answer “does at least one child exist?”. Keep the code simple
+            first; optimize only after a measured need.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Read Submit as business decisions</h2>
+        <table>
+          <thead><tr><th>Code concept</th><th>Business meaning</th><th>Runtime effect</th></tr></thead>
+          <tbody>
+            <tr><td><code>keys</code></td><td>Requests on which the consumer invoked Submit.</td><td>Supports one or many selected instances.</td></tr>
+            <tr><td><code>request-%tky</code></td><td>Exact active/draft transactional instance.</td><td>The read, failure, update, message, and result refer to the same instance.</td></tr>
+            <tr><td>Source-state condition</td><td>Only Open or On Hold may enter Submitted.</td><td>An illegal command never reaches the update table.</td></tr>
+            <tr><td><code>item_links</code></td><td>Evidence that the aggregate contains a child Item.</td><td>An empty Request fails before status changes.</td></tr>
+            <tr><td><code>failed</code></td><td>This action instance was rejected.</td><td>RAP does not perform the requested transition for that key.</td></tr>
+            <tr><td><code>reported</code></td><td>Explain which transition invariant failed.</td><td>Consumer receives an actionable message; it is not a persistent log.</td></tr>
+            <tr><td>Local EML update</td><td>The BO, not the consumer, owns the status code.</td><td>Updates the current transactional state without committing.</td></tr>
+            <tr><td><code>%param</code></td><td>Return the changed Request promised by <code>$self</code>.</td><td>Consumer receives Submitted status and other current fields.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Step 6 — Implement Release with the same pattern</h2>
+        <p class="answer-frame">
+          Business rule: only a Submitted Request with a positive derived total
+          may become Released.
+        </p>
+        <pre><code>METHOD Release.
+  READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderRequest
+      FIELDS ( Status TotalAmount )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(requests).
+
+  DATA requests_to_update TYPE TABLE FOR UPDATE
+    ZI_SalesOrderRequest.
+
+  LOOP AT requests INTO DATA(request).
+    IF request-Status &lt;&gt; request_status-submitted.
+      APPEND VALUE #( %tky = request-%tky )
+        TO failed-SalesOrderRequest.
+      APPEND VALUE #(
+        %tky = request-%tky
+        %msg = new_message_with_text(
+          severity = if_abap_behv_message=&gt;severity-error
+          text = 'Only a Submitted Request can be released' )
+        %element-Status = if_abap_behv=&gt;mk-on
+      ) TO reported-SalesOrderRequest.
+      CONTINUE.
+    ENDIF.
+
+    IF request-TotalAmount &lt;= 0.
+      APPEND VALUE #( %tky = request-%tky )
+        TO failed-SalesOrderRequest.
+      APPEND VALUE #(
+        %tky = request-%tky
+        %msg = new_message_with_text(
+          severity = if_abap_behv_message=&gt;severity-error
+          text = 'A Request with a non-positive total cannot be released' )
+        %element-TotalAmount = if_abap_behv=&gt;mk-on
+      ) TO reported-SalesOrderRequest.
+      CONTINUE.
+    ENDIF.
+
+    APPEND VALUE #(
+      %tky   = request-%tky
+      Status = request_status-released
+    ) TO requests_to_update.
+  ENDLOOP.
+
+  IF requests_to_update IS NOT INITIAL.
+    MODIFY ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+      ENTITY SalesOrderRequest
+        UPDATE FIELDS ( Status )
+        WITH requests_to_update.
+
+    READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+      ENTITY SalesOrderRequest
+        ALL FIELDS
+        WITH CORRESPONDING #( requests_to_update )
+        RESULT DATA(updated_requests).
+
+    result = VALUE #(
+      FOR updated_request IN updated_requests
+      ( %tky   = updated_request-%tky
+        %param = updated_request ) ).
+  ENDIF.
+ENDMETHOD.</code></pre>
+      </section>
+
+      <section>
+        <h2>Step 7 — Implement Put On Hold</h2>
+        <p class="answer-frame">
+          Business rule: Open or Submitted may move to On Hold. Released is
+          terminal in this lesson, and invoking Hold on an already-held
+          Request is rejected rather than silently succeeding.
+        </p>
+        <pre><code>METHOD PutOnHold.
+  READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+    ENTITY SalesOrderRequest
+      FIELDS ( Status )
+      WITH CORRESPONDING #( keys )
+      RESULT DATA(requests).
+
+  DATA requests_to_update TYPE TABLE FOR UPDATE
+    ZI_SalesOrderRequest.
+
+  LOOP AT requests INTO DATA(request).
+    IF request-Status &lt;&gt; request_status-open AND
+       request-Status &lt;&gt; request_status-submitted.
+      APPEND VALUE #( %tky = request-%tky )
+        TO failed-SalesOrderRequest.
+      APPEND VALUE #(
+        %tky = request-%tky
+        %msg = new_message_with_text(
+          severity = if_abap_behv_message=&gt;severity-error
+          text = |Request cannot be put on hold from status { request-Status }| )
+        %element-Status = if_abap_behv=&gt;mk-on
+      ) TO reported-SalesOrderRequest.
+      CONTINUE.
+    ENDIF.
+
+    APPEND VALUE #(
+      %tky   = request-%tky
+      Status = request_status-on_hold
+    ) TO requests_to_update.
+  ENDLOOP.
+
+  IF requests_to_update IS NOT INITIAL.
+    MODIFY ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+      ENTITY SalesOrderRequest
+        UPDATE FIELDS ( Status )
+        WITH requests_to_update.
+
+    READ ENTITIES OF ZI_SalesOrderRequest IN LOCAL MODE
+      ENTITY SalesOrderRequest
+        ALL FIELDS
+        WITH CORRESPONDING #( requests_to_update )
+        RESULT DATA(updated_requests).
+
+    result = VALUE #(
+      FOR updated_request IN updated_requests
+      ( %tky   = updated_request-%tky
+        %param = updated_request ) ).
+  ENDIF.
+ENDMETHOD.</code></pre>
+      </section>
+
+      <section>
+        <h2>Step 8 — Expose the actions to this consumer</h2>
+        <p>Add the actions to the root behavior projection:</p>
+        <pre><code>projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZC_SalesOrderRequest alias SalesOrderRequest
+  use etag
+{
+  // keep CRUD, draft actions, and association exposure
+  use action Submit;
+  use action Release;
+  use action PutOnHold;
+}</code></pre>
+        <p>
+          The base BDEF owns and implements the commands. The behavior
+          projection only decides that this service consumer may invoke them.
+          Do not reimplement action logic in the projection.
+        </p>
+      </section>
+
+      <section>
+        <h2>Expected UI behavior before Lesson 11</h2>
+        <p>
+          All three action buttons may remain visible or enabled regardless of
+          current status. That is acceptable for this lesson because the
+          action handlers still reject illegal transitions. Lesson 11 will add
+          instance feature control so the UI advertises only currently valid
+          operations, plus side effects where immediate rereads are needed.
+        </p>
+        <div class="callout">
+          <p>
+            Feature control improves guidance; it does not replace the action's
+            backend invariant. Authorization later answers a separate question:
+            whether this user may perform a transition that is otherwise legal.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Step 9 — Prove every legal and illegal transition</h2>
+        <table>
+          <thead><tr><th>Starting status/data</th><th>Command</th><th>Expected result</th></tr></thead>
+          <tbody>
+            <tr><td>Open with Item</td><td>Submit</td><td>Submitted and returned through <code>$self</code>.</td></tr>
+            <tr><td>Open without Item</td><td>Submit</td><td>Failed; message says at least one Item is required.</td></tr>
+            <tr><td>Open</td><td>Release</td><td>Failed; only Submitted may release.</td></tr>
+            <tr><td>Submitted, positive total</td><td>Release</td><td>Released.</td></tr>
+            <tr><td>Submitted</td><td>PutOnHold</td><td>On Hold.</td></tr>
+            <tr><td>On Hold</td><td>Submit</td><td>Submitted.</td></tr>
+            <tr><td>On Hold</td><td>Release</td><td>Failed.</td></tr>
+            <tr><td>Released</td><td>Any transition action</td><td>Failed; Released is terminal.</td></tr>
+            <tr><td>Two selected Requests: one legal, one illegal</td><td>Submit</td><td>Record exact framework behavior and ensure each key has the correct result/message; use separate requests for deterministic portfolio evidence if necessary.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Capture the before status, requested action, <code>failed</code> and
+          <code>reported</code> response, returned <code>%param</code>, and final
+          active state for every row.
+        </p>
+      </section>
+
+      <section>
+        <h2>Troubleshooting guide</h2>
+        <table>
+          <thead><tr><th>Symptom</th><th>Inspect first</th><th>Likely cause</th></tr></thead>
+          <tbody>
+            <tr><td>Status can still be typed directly</td><td>Base BDEF field control</td><td><code>Status</code> was not declared read-only.</td></tr>
+            <tr><td>New Request has blank status</td><td><code>setInitialStatus</code> declaration/implementation</td><td>The create determination is missing or inactive.</td></tr>
+            <tr><td>Action button absent</td><td>Behavior projection and service metadata</td><td><code>use action</code> is missing or cached metadata is stale.</td></tr>
+            <tr><td>Action changes wrong draft/active version</td><td><code>%tky</code></td><td>The complete transactional key was not propagated.</td></tr>
+            <tr><td>Illegal transition still changes status</td><td>Update-table construction</td><td>The failed instance was appended to <code>requests_to_update</code> or did not <code>CONTINUE</code>.</td></tr>
+            <tr><td>Action fails without explanation</td><td><code>reported</code></td><td>The handler filled <code>failed</code> but no message.</td></tr>
+            <tr><td>Status changes but consumer shows old entity</td><td><code>result [1] $self</code> construction</td><td>The updated instance was not reread or placed in <code>%param</code>.</td></tr>
+            <tr><td>All buttons remain enabled</td><td>Current lesson boundary</td><td>Instance feature control is intentionally deferred to Lesson 11.</td></tr>
+            <tr><td>Unauthorized user can release</td><td>Current lesson boundary</td><td>Instance authorization is a later security lesson; action validity alone is not user authorization.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Interview retrieval</h2>
+        <div class="interview-target">
+          <p>
+            Primary target from the
+            <a href="../reference/SAP_TechConsultant_Interview_160Q.html#s4">RAP interview section</a>:
+          </p>
+          <p><span class="interview-id">RAP D7</span></p>
+        </div>
+        <p>Close ADT and answer one question at a time:</p>
+        <ul class="checklist">
+          <li>What is a RAP action, and why is Submit an action rather than a determination or field update?</li>
+          <li>What is the difference between technical draft state and business status?</li>
+          <li>What does <code>result [1] $self</code> promise?</li>
+          <li>Why does an action receive a table of <code>keys</code> rather than one UUID?</li>
+          <li>How does Submit find whether a Request contains at least one Item?</li>
+          <li>Why are illegal keys added to <code>failed</code> and excluded from the update table?</li>
+          <li>Why does the handler use local EML rather than updating the persistence table with SQL?</li>
+          <li>Why must the method reread updated Requests before filling <code>result-%param</code>?</li>
+          <li>How do action guards, feature control, validation, and authorization answer different questions?</li>
+          <li>Which transitions are legal in this state machine, and why is Released terminal?</li>
+        </ul>
+        <p class="answer-frame">
+          Structure each answer as: business command → allowed source state →
+          invariant reads → failed/reported or update → returned state → save
+          consequence.
+        </p>
+        <p>
+          <strong>Pass condition:</strong> demonstrate every legal transition,
+          at least four illegal transitions, the empty-Request Submit failure,
+          read-only Status, returned <code>$self</code>, and all ten answers from
+          memory.
+        </p>
+      </section>
+
+      <section>
+        <h2>Primary sources</h2>
+        <p>
+          Verify the design against SAP Help's
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/draft-developing-actions">Developing Actions</a>,
+          <a href="https://help.sap.com/docs/abap-cloud/abap-rap/action-implementation">Action Implementation</a>, and
+          <a href="https://help.sap.com/docs/abap-cloud/abap-keyword/rap-action">RAP Action keyword documentation</a>.
+          Compare the update-and-return pattern with SAP's
+          <a href="https://github.com/SAP-samples/abap-platform-rap110/blob/main/exercises/ex07/README.md">RAP110 action exercise</a>.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          Ask your teaching agent to review the state machine, transition
+          guards, failed/reported responses, local EML updates, returned
+          <code>$self</code>, and evidence matrix. After a pass, Lesson 11
+          should add instance feature control and side effects so the UI
+          reflects which actions and derived fields currently apply.
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

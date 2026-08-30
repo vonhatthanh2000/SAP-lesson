@@ -83,7 +83,7 @@ The one-month core targets RAP, operational CDS/Fiori, and selected ABAP/BTP pre
 | 9 | Complete [Lesson 7: Protect Edits with Draft and ETags](./lessons/0007-protect-edits-with-draft-and-etags.html). Test two-user and stale-update scenarios where possible. | Draft demo and concurrency notes |
 | 10 | Complete [Lesson 8: Derive Amounts with Determinations](./lessons/0008-derive-amounts-with-determinations.html) for Item net amount and Request total. | Before/after tests and rule-placement rationale |
 | 11 | Complete [Lesson 9: Reject Inconsistent Saves with Validations](./lessons/0009-reject-inconsistent-saves-with-validations.html) for quantity and reference invariants, plus the optional delivery-date extension. | Message behavior and negative-path test matrix |
-| 12 | Add actions such as `Submit`, `Release`, and `PutOnHold`. Encode status invariants. | Action contract, authorization expectations, tests |
+| 12 | Complete [Lesson 10: Control Status with RAP Actions](./lessons/0010-control-status-with-actions.html). Implement `Submit`, `Release`, and `PutOnHold` with guarded status transitions. | Action contract, authorization expectations, tests |
 | 13 | Add instance feature control and side effects where the UI needs immediate refresh. | UI state demo linked to backend state |
 | 14 | Publish Video 2 and Video 3. | “Managed BO lifecycle” and “Rules: determination vs validation vs action” |
 

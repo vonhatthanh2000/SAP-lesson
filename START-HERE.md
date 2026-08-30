@@ -25,6 +25,8 @@ Business-logic lesson: [Lesson 8 — Derive Amounts with Determinations](./lesso
 
 Save-invariant lesson: [Lesson 9 — Reject Inconsistent Saves with Validations](./lessons/0009-reject-inconsistent-saves-with-validations.html). Begin it only after Lesson 8 derives Item and Request amounts for create, update, and delete paths.
 
+Business-action lesson: [Lesson 10 — Control Status with RAP Actions](./lessons/0010-control-status-with-actions.html). Begin it only after Lesson 9 rejects invalid Customer, Product, and quantity states during activation.
+
 ## Course documents
 
 - [Mission](./MISSION.md) — the outcome every lesson must serve.
