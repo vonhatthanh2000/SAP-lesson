@@ -44,6 +44,16 @@
   Official overview of S/4HANA Cloud Sales API coverage. Use for: scoping genuine SD integration only when a suitable S/4 system is available.
 - [SAP Help: Sales Order EML Example](https://help.sap.com/docs/SAP_S4HANA_CLOUD/6aa39f1ac05441e5a23f484f31e477e7/d2bc96018de74001af7ad191e06b9382.html)
   First-party example of write access through `I_SalesOrderTP`. Use for: the optional local S/4 adapter only after confirming the BO is released in the target system.
+- [SAP Learning: Exploring SAP S/4HANA Sales Essentials](https://learning.sap.com/courses/exploring-sap-s-4hana-sales-essentials)
+  Current first-party introduction to organizational units, order-to-cash, master data, presales, shipping, billing, and analytics. Use for: the conceptual spine of the SD expansion track.
+- [SAP Learning: Navigating the Order-to-Cash Process Steps](https://learning.sap.com/courses/discovering-the-basics-of-sap-s-4hana-sales/executing-sales-order-management_cad9dfbe-bafc-4ed9-ac2e-6fd8422430e4)
+  Traces sales order, sourcing, delivery, goods issue, billing, payment, and document flow. Use for: Lesson 11 and all end-to-end process explanations.
+- [SAP Learning: Fundamental Customizing in SAP S/4HANA Sales](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales)
+  Current first-party coverage of enterprise structure and sales configuration. Use for: verifying classic IMG-oriented secondary tutorials before making configuration claims.
+- [SAP Learning Journey: Implementing Sales in SAP S/4HANA Cloud Public Edition](https://learning.sap.com/learning-journeys/implementing-sap-s4hana-cloud-public-edition-sales)
+  Consultant-oriented implementation path including sales processes, delivery scheduling, availability, third-party sales, and other core functions. Use for: shaping the later deep-SD sequence.
+- [Tutorial Campus: SAP SD Tutorial](https://www.tutorialscampus.com/sap-sd/)
+  Secondary 84-page library covering classic SD vocabulary, configuration, and transaction examples. Use for: breadth and supporting examples only; route through the [complete local source map](./reference/sap-sd-source-map.html) and verify current S/4HANA claims against SAP sources.
 
 ## Practice prompts (not knowledge sources)
 
@@ -64,5 +74,6 @@
 ## Gaps
 
 - Access to a real S/4HANA system with configured SD scope, representative master data, roles, and released Sales APIs is not guaranteed. The core project must not depend on it.
+- The Tutorial Campus SAP SD pages are broad but do not consistently establish product edition, release, or whether a classic customer-master/customizing path is preferred in current S/4HANA. Treat them as secondary material.
 - RAP features differ by ABAP Platform release. Confirm the backend version and select matching repository branches before importing examples.
 - Trial/free-plan availability, quotas, and lifetime can change. Verify them at setup time and export work through abapGit regularly.

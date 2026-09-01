@@ -27,6 +27,8 @@ Save-invariant lesson: [Lesson 9 — Reject Inconsistent Saves with Validations]
 
 Business-action lesson: [Lesson 10 — Control Status with RAP Actions](./lessons/0010-control-status-with-actions.html). Begin it only after Lesson 9 rejects invalid Customer, Product, and quantity states during activation.
 
+SD foundation lesson: [Lesson 11 — Trace the SD Order-to-Cash Flow](./lessons/0011-trace-sd-order-to-cash.html). This begins an SD expansion track without replacing the RAP portfolio roadmap. First learn the document handoffs; later lessons return to enterprise structure, master data, document control, pricing, fulfillment, billing, and credit.
+
 ## Course documents
 
 - [Mission](./MISSION.md) — the outcome every lesson must serve.
@@ -37,6 +39,7 @@ Business-action lesson: [Lesson 10 — Control Status with RAP Actions](./lesson
 - [OpenSAP Travel sample analysis](./reference/opensap-travel-sample.html) — concrete end-to-end code trace and Sales Order transfer map, with historical-version warnings.
 - [Interview-readiness map](./reference/interview-readiness-map.html) — maps the 160-question bank to lessons, milestones, and explicit scope boundaries.
 - [SAP Technical Consultant interview bank](./reference/SAP_TechConsultant_Interview_160Q.html) — practice prompts and draft answers; verify technical claims against the primary sources above.
+- [SAP SD source map](./reference/sap-sd-source-map.html) — all 84 Tutorial Campus SAP SD pages reorganized into a current, business-flow-first study sequence.
 - [Glossary](./GLOSSARY.md) — terminology demonstrated and established during retrieval checks.
 - [Primary-source research](./research/sap-rap-primary-sources.md) — detailed evidence, environment boundaries, and source map.
 

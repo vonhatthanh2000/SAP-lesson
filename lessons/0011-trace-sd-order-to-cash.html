@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 11 — Trace the SD Order-to-Cash Flow</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 11 · 60–75 minutes · SAP SD foundation</div>
+        <h1>Trace one sale from customer request to accounting</h1>
+        <p class="lede">
+          Learn the document chain before learning configuration. For each
+          order-to-cash step, identify the responsible role, the document it
+          creates, and the business state it changes.
+        </p>
+      </header>
+
+      <section>
+        <h2>Why this is your first deep SD lesson</h2>
+        <p>
+          You already understand a RAP root/child aggregate, transactional
+          state, validations, and actions. Standard SD adds a different idea:
+          the complete sale is usually represented by a <em>flow of related
+          business documents</em>, not by one giant mutable object. That is the
+          bridge between your RAP knowledge and functional SD reasoning.
+        </p>
+        <div class="callout success">
+          <p>
+            <strong>Tangible win:</strong> given a customer order, explain in
+            90 seconds why Sales Order, Outbound Delivery, Goods Issue, Billing
+            Document, and Accounting Document are different records—and name
+            the operational or financial effect of each.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The business story</h2>
+        <p>
+          Bike World asks your company for 10 bicycles. The company confirms
+          the sale, warehouse staff ship the goods, billing invoices the
+          customer, and Finance records and clears the receivable. Ask one
+          question throughout the lesson:
+        </p>
+        <div class="callout">
+          <p><strong>What is now true in the business that was not true before this step?</strong></p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The backbone: document, owner, effect</h2>
+        <div class="flow" aria-label="Order-to-cash document flow">
+          <span>Inquiry</span><i>→</i><span>Quotation</span><i>→</i>
+          <span>Sales Order</span><i>→</i><span>Outbound Delivery</span>
+          <i>→</i><span>Goods Issue</span><i>→</i>
+          <span>Billing</span><i>→</i><span>Payment</span>
+        </div>
+        <p>
+          Inquiry and quotation are optional presales documents. A common
+          stock-sales path begins with the sales order, continues through an
+          outbound delivery and goods issue, and then reaches billing and
+          Finance. SAP’s current learning material presents the same core
+          sequence and uses process flow to navigate the relationships between
+          documents:
+          <a href="https://learning.sap.com/courses/discovering-the-basics-of-sap-s-4hana-sales/executing-sales-order-management_cad9dfbe-bafc-4ed9-ac2e-6fd8422430e4">Navigating the Order-to-Cash Process Steps</a>.
+        </p>
+        <table>
+          <thead><tr><th>Step</th><th>Primary owner</th><th>What becomes true</th><th>What does not happen yet</th></tr></thead>
+          <tbody>
+            <tr><td>Inquiry</td><td>Sales</td><td>A customer’s interest or question is recorded.</td><td>No sale is agreed.</td></tr>
+            <tr><td>Quotation</td><td>Sales</td><td>A time-bound commercial offer exists.</td><td>Goods are not shipped.</td></tr>
+            <tr><td>Sales Order</td><td>Sales</td><td>The requested products, quantities, partners, price, and delivery intent are recorded and processed.</td><td>Physical stock has not left.</td></tr>
+            <tr><td>Outbound Delivery</td><td>Shipping</td><td>A fulfillment document controls picking, optional packing, and shipment preparation.</td><td>Goods issue is not posted merely by creating the delivery.</td></tr>
+            <tr><td>Post Goods Issue</td><td>Shipping / Inventory</td><td>The system records that goods left; inventory quantity and value are affected.</td><td>The customer receivable is not created by PGI.</td></tr>
+            <tr><td>Billing Document</td><td>Billing</td><td>The customer is invoiced; relevant billing data is transferred to accounting.</td><td>Customer payment is not automatically received.</td></tr>
+            <tr><td>Incoming Payment</td><td>Finance</td><td>The payment is posted and the receivable can be cleared.</td><td>This is outside core SD execution, though integrated with it.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Do not confuse document creation with its decisive posting</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Delivery created</h3>
+            <p>The warehouse has an execution document. Picking and packing can be planned or recorded.</p>
+          </article>
+          <article class="card">
+            <h3>Goods issue posted</h3>
+            <p>The physical issue becomes an inventory event, with quantity and value consequences.</p>
+          </article>
+          <article class="card">
+            <h3>Billing created</h3>
+            <p>The receivable and revenue side can be posted to Financial Accounting.</p>
+          </article>
+        </div>
+        <p>
+          This distinction is a frequent source of weak explanations. “The
+          delivery reduces stock” is too vague: the decisive event in the
+          standard flow is posting goods issue. Likewise, billing and payment
+          are separate: billing establishes what the customer owes; payment
+          settles it. See SAP Learning’s explanation of the
+          <a href="https://learning.sap.com/courses/end-to-end-processes-in-receivables-management/explaining-the-integration-between-sales-order-and-receivables-management_b97d8b06-c206-43cf-a6b2-b9bf1f3ccf37">Sales Order–Receivables integration</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Look inside the Sales Order: three levels</h2>
+        <table>
+          <thead><tr><th>Level</th><th>Scope</th><th>Examples</th><th>Question it answers</th></tr></thead>
+          <tbody>
+            <tr><td>Header</td><td>Whole sales document</td><td>Sold-to party, sales area, overall dates</td><td>Who is this transaction with, and under which commercial context?</td></tr>
+            <tr><td>Item</td><td>One product/service line</td><td>Material, ordered quantity, item category, conditions</td><td>What is being sold, and how is this line processed?</td></tr>
+            <tr><td>Schedule line</td><td>Quantity/date commitment within an item</td><td>Confirmed quantity, requested/confirmed date</td><td>How much can be delivered, and when?</td></tr>
+          </tbody>
+        </table>
+        <p>
+          An item can have more than one schedule line when quantities are
+          confirmed for different dates. This is why your RAP portfolio’s
+          Request → Item model is a useful simplification, but not yet a full
+          representation of standard sales-order execution. SAP’s official
+          lesson describes the same header, item, and schedule-line structure:
+          <a href="https://learning.sap.com/courses/discovering-the-basics-of-sap-s-4hana-sales/executing-sales-order-management_cad9dfbe-bafc-4ed9-ac2e-6fd8422430e4">sales document structure</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Document flow is lineage, not one status field</h2>
+        <p>
+          The order-to-cash process can split. An order for 10 bicycles might
+          produce a delivery and invoice for 6 now, with 4 remaining open for
+          later fulfillment. The linked documents and their quantities explain
+          what happened more precisely than a single header status.
+        </p>
+        <table>
+          <thead><tr><th>Record</th><th>Quantity</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>Sales-order item</td><td>10</td><td>The customer ordered 10.</td></tr>
+            <tr><td>First delivery / PGI</td><td>6</td><td>Six have physically left.</td></tr>
+            <tr><td>First invoice</td><td>6</td><td>Six have been billed in this example.</td></tr>
+            <tr><td>Open requirement</td><td>4</td><td>Four remain to be fulfilled, subject to configuration and process status.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <p>
+            <strong>RAP transfer:</strong> Lesson 10 modeled explicit status
+            transitions inside one custom Request BO. Standard SD also needs
+            status, but document flow records lineage across separate business
+            documents. Do not model a real order, warehouse execution, billing,
+            and FI posting as one custom RAP aggregate merely because they form
+            one business story.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Your 15-minute tracing exercise</h2>
+        <p>
+          Without looking at the table above, draw seven boxes from customer
+          interest to payment. Under every box write:
+        </p>
+        <ol>
+          <li>the business document or posting,</li>
+          <li>the role that owns the step,</li>
+          <li>one fact that becomes true, and</li>
+          <li>one tempting but incorrect effect that has not happened yet.</li>
+        </ol>
+        <p>Then explain these two failure scenarios:</p>
+        <ol>
+          <li>A delivery exists, but PGI was not posted. What work can exist, and what inventory event is still missing?</li>
+          <li>A billing document exists, but no payment was received. What does the customer owe, and which team owns the next step?</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Retrieval questions — answer one at a time</h2>
+        <ol>
+          <li>What is the difference between order-to-cash and a single Sales Order?</li>
+          <li>Which steps are optional before the Sales Order?</li>
+          <li>What does a Sales Order record, and what physical event has not happened?</li>
+          <li>Why are Outbound Delivery and PGI separate?</li>
+          <li>Which event changes inventory quantity and value?</li>
+          <li>How do billing and incoming payment differ?</li>
+          <li>What belongs at header, item, and schedule-line level?</li>
+          <li>Why can one order item lead to multiple downstream documents?</li>
+          <li>How is SD document flow different from a RAP composition?</li>
+          <li>For a partial delivery of 6 from an ordered 10, what remains open?</li>
+        </ol>
+        <div class="interview-target">
+          <span class="interview-id">SD foundation</span>
+          <p>
+            Use this answer frame: <strong>business intent → document → owner
+            → operational/financial effect → next document</strong>. Avoid an
+            answer that is only a list of transaction codes.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Reading route</h2>
+        <p>
+          <strong>Primary reading:</strong>
+          <a href="https://learning.sap.com/courses/discovering-the-basics-of-sap-s-4hana-sales/executing-sales-order-management_cad9dfbe-bafc-4ed9-ac2e-6fd8422430e4">SAP Learning — Navigating the Order-to-Cash Process Steps</a>.
+        </p>
+        <p>
+          <strong>Supporting Tutorial Campus examples:</strong>
+          <a href="https://www.tutorialscampus.com/sap-sd/create-inquiry.htm">Inquiry</a>,
+          <a href="https://www.tutorialscampus.com/sap-sd/create-quotation.htm">Quotation</a>,
+          <a href="https://www.tutorialscampus.com/sap-sd/create-sales-order.htm">Sales Order</a>,
+          <a href="https://www.tutorialscampus.com/sap-sd/create-picking-request.htm">Picking</a>,
+          <a href="https://www.tutorialscampus.com/sap-sd/create-packing-request.htm">Packing</a>, and
+          <a href="https://www.tutorialscampus.com/sap-sd/post-goods-issue.htm">Post Goods Issue</a>.
+          Use the
+          <a href="../reference/sap-sd-source-map.html">complete 84-page SAP SD source map</a>
+          to locate every later topic.
+        </p>
+      </section>
+
+      <section>
+        <h2>Completion gate</h2>
+        <ul class="checklist">
+          <li>I can draw the core document flow without notes.</li>
+          <li>I can separate delivery creation from posting goods issue.</li>
+          <li>I can separate billing from incoming payment.</li>
+          <li>I can classify data as header, item, or schedule-line level.</li>
+          <li>I can explain why document flow is not one giant aggregate.</li>
+          <li>I answered the ten questions aloud and corrected weak answers.</li>
+        </ul>
+      </section>
+
+      <footer>
+        Previous: <a href="./0010-control-status-with-actions.html">Lesson 10 — RAP Actions</a>.
+        Ask your teacher about any step that feels like “just another status”; we
+        can trace the exact document, ownership boundary, and posting effect.
+        Next SD lesson: enterprise structure—who sells what, how, and from where.
+      </footer>
+    </main>
+  </body>
+</html>
