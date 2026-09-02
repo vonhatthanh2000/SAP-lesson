@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 13 — Trace Sales Order Data to Its Source</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 13 · 90–105 minutes · SAP SD master data</div>
+        <h1>Trace every Sales Order value back to its source</h1>
+        <p class="lede">
+          Learn how Business Partner, Material, partner-function, and
+          customer-material data supply reusable facts to a Sales Order. For
+          each important field, identify its source, organizational scope, and
+          whether it was entered, copied, derived, or overridden.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite gate</h2>
+        <p>
+          Begin after you can reconstruct Sales Area and Distribution Chain
+          without notes and can distinguish Plant from Shipping Point. Review
+          the
+          <a href="../lesson-notes/0012-sd-enterprise-structure-recap.md">Lesson 12 recap</a>
+          if organizational scope is still unclear.
+        </p>
+        <div class="callout success">
+          <p>
+            <strong>Tangible win:</strong> inspect a proposed Sales Order and
+            explain where its partners, payment terms, internal material,
+            customer material number, sales unit, delivering Plant, and
+            Shipping Point came from—without saying “SAP filled it
+            automatically.”
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The core model: a transaction assembled from sources</h2>
+        <div class="flow" aria-label="Sources of sales order data">
+          <span>Reference document</span><i>+</i>
+          <span>Master data</span><i>+</i>
+          <span>Customizing</span><i>+</i>
+          <span>Existing document data</span><i>+</i>
+          <span>User input</span><i>→</i>
+          <span>Sales Order</span>
+        </div>
+        <p>
+          SAP analyzes several information sources during document entry. A
+          quotation may supply copied document data; Business Partner,
+          Material, pricing, and customer-material records supply reusable
+          defaults; Customizing defines controls and determination strategies;
+          values already present in the document can become inputs to later
+          determinations; and users can enter or change permitted values. The
+          runtime also controls the sequence in which sources are considered.
+          SAP’s current configuration course summarizes these source classes:
+          <a href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/identifying-the-source-of-data-in-a-sales-document">Identifying the Source of Data in a Sales Document</a>.
+        </p>
+        <div class="callout">
+          <p>
+            Do not memorize one universal precedence order. The source and
+            priority are field-specific and can depend on document type,
+            Customizing, existing values, and release. Ask: <strong>which
+            determination owns this field?</strong>
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Master data versus transactional data</h2>
+        <table>
+          <thead><tr><th>Master data</th><th>Sales Order data</th></tr></thead>
+          <tbody>
+            <tr><td>Reusable facts about a Business Partner, Material, or customer/material relationship.</td><td>Facts accepted for one specific business transaction.</td></tr>
+            <tr><td>Maintained for an organizational scope and reused across documents.</td><td>Copied, derived, or entered under the document's organizational context.</td></tr>
+            <tr><td>May change as the real-world party or product changes.</td><td>Usually preserves the commercial decision made for that transaction.</td></tr>
+            <tr><td>Independent lifecycle.</td><td>Part of the Sales Order's lifecycle and document history.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Most later changes to customer master data do not retroactively
+          update an existing Sales Order; the document must be changed
+          explicitly if required. SAP identifies address handling as an
+          exception in its essentials course, including time-dependent address
+          behavior:
+          <a href="https://learning.sap.com/courses/exploring-sap-s-4hana-sales-essentials/maintaining-business-partner-master-data_ce0c428f-2cad-4126-9f9a-1a263c3cc41b">Maintaining Business Partner Master Data</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Do not confuse three kinds of “role”</h2>
+        <table>
+          <thead><tr><th>Concept</th><th>Question answered</th><th>Examples</th></tr></thead>
+          <tbody>
+            <tr><td>BP Category</td><td>What fundamental kind of party is this?</td><td>Person, Organization, Group</td></tr>
+            <tr><td>BP Role</td><td>In which application context may this BP operate, and which data segments are needed?</td><td>Customer, Customer (Financial Accounting), Supplier</td></tr>
+            <tr><td>Partner Function</td><td>What responsibility does this partner have in this sales transaction?</td><td>Sold-to, Ship-to, Bill-to, Payer</td></tr>
+          </tbody>
+        </table>
+        <p>
+          A BP Category classifies the party. A BP Role enables a business
+          context and its data. A Partner Function assigns responsibility in a
+          process or document. Calling all three “customer role” hides
+          important differences.
+        </p>
+      </section>
+
+      <section>
+        <h2>Business Partner data has organizational scope</h2>
+        <table>
+          <thead><tr><th>Scope</th><th>Purpose</th><th>Typical examples</th></tr></thead>
+          <tbody>
+            <tr><td>General / client-wide</td><td>Identity shared across application contexts.</td><td>Name, core address, contact and control data</td></tr>
+            <tr><td>Company Code</td><td>Accounts Receivable and financial processing for one accounting unit.</td><td>Reconciliation account, payment and correspondence data</td></tr>
+            <tr><td>Sales Area</td><td>Sales, shipping, and billing relationship for one Sales Org/Channel/Division.</td><td>Sales currency, shipping conditions, payment terms, delivering-Plant proposal, partner relationships</td></tr>
+          </tbody>
+        </table>
+        <p>
+          A Business Partner can exist at the general level yet still be
+          unusable for a particular Sales Area if the relevant customer sales
+          data is missing. Likewise, billing requires the appropriate
+          accounting data for the Payer. In SAP S/4HANA, Business Partner is
+          the central maintenance approach, while customer roles provide the
+          sales and accounting contexts.
+        </p>
+      </section>
+
+      <section>
+        <h2>The four customer partner functions</h2>
+        <table>
+          <thead><tr><th>Partner function</th><th>Business responsibility</th><th>Data emphasis</th></tr></thead>
+          <tbody>
+            <tr><td>Sold-to Party</td><td>Places or owns the commercial order relationship.</td><td>Sales relationship, commercial defaults</td></tr>
+            <tr><td>Ship-to Party</td><td>Receives the goods.</td><td>Delivery address, unloading point, receiving hours</td></tr>
+            <tr><td>Bill-to Party</td><td>Receives the invoice.</td><td>Invoice address and communication</td></tr>
+            <tr><td>Payer</td><td>Is responsible for settling the receivable.</td><td>Payment-related and financial data</td></tr>
+          </tbody>
+        </table>
+        <p>
+          One Business Partner may perform all four functions. A more complex
+          customer can use different partners: headquarters orders, a warehouse
+          receives, an accounts-payable office receives the invoice, and a
+          treasury entity pays. Partner relationships maintained for the
+          Sold-to Party are normally proposed into the Sales Order; the partner
+          determination procedure controls which functions are allowed,
+          mandatory, changeable, or determined at header/item level. See SAP’s
+          <a href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/applying-the-partner-function-concept">Partner Function Concept</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Material master: one product, scoped views</h2>
+        <p>
+          The Material—or Product—master is the central repository for products
+          a company procures, produces, stores, or sells. Departments use
+          different views and organizational levels rather than duplicating the
+          product as unrelated records. SAP introduces this model in
+          <a href="https://learning.sap.com/courses/exploring-sap-s-4hana-sales-essentials/maintaining-material-master-data_db87a1fe-aa83-456b-9540-fd9561195213">Maintaining Material Master Data</a>.
+        </p>
+        <table>
+          <thead><tr><th>Scope/view</th><th>Question</th><th>Examples</th></tr></thead>
+          <tbody>
+            <tr><td>General</td><td>What is this product?</td><td>Description, base unit, product attributes</td></tr>
+            <tr><td>Sales Org + Distribution Channel</td><td>How is it sold through this Distribution Chain?</td><td>Sales-unit and sales-processing data</td></tr>
+            <tr><td>Plant</td><td>How is it planned, supplied, and handled at this location?</td><td>Availability, MRP, loading or fulfillment-relevant data</td></tr>
+            <tr><td>Accounting / valuation scope</td><td>How is its stock valued?</td><td>Valuation class and price-related data</td></tr>
+          </tbody>
+        </table>
+        <p>
+          A Material can exist generally but still be unavailable for a Sales
+          Order if the required sales or Plant-specific data has not been
+          extended to the relevant organizational levels.
+        </p>
+      </section>
+
+      <section>
+        <h2>Customer-material information: the specific intersection</h2>
+        <div class="flow" aria-label="Customer material record scope">
+          <span>Customer</span><i>+</i>
+          <span>Sales Organization</span><i>+</i>
+          <span>Distribution Channel</span><i>+</i>
+          <span>Material</span><i>→</i>
+          <span>Customer-Material Info</span>
+        </div>
+        <p>
+          A customer-material record stores facts that are true only for a
+          particular customer/product commercial relationship. It can contain
+          the customer's own material number and description, delivery data,
+          and agreed tolerances. During order entry, the customer’s material
+          number can be mapped to the company’s internal Material. SAP documents
+          this purpose in
+          <a href="https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/3c8bc95360267214e10000000a174cb4.html">Customer Material Information</a>.
+        </p>
+        <div class="callout">
+          <p>
+            Specificity matters: “this Material is sold in pieces” is a general
+            or sales-scope fact; “Customer C100 calls this Material BW-900 and
+            accepts this delivery tolerance” belongs to their relationship.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Worked order: BikeWorld buys a city bicycle</h2>
+        <h3>Reusable data before order entry</h3>
+        <table>
+          <thead><tr><th>Source</th><th>Scope</th><th>Relevant data</th></tr></thead>
+          <tbody>
+            <tr><td>BP <code>C100</code></td><td>Sales Area V100/20/BI</td><td>Sold-to BikeWorld HQ; payment terms 30 days; wholesale shipping condition</td></tr>
+            <tr><td>Partner relationships</td><td>C100 in V100/20/BI</td><td>Ship-to C110, Bill-to C120, Payer C130</td></tr>
+            <tr><td>Material <code>M-BIKE-01</code></td><td>General and V100/20</td><td>City Bicycle; base/sales unit PC; sales-processing data</td></tr>
+            <tr><td>Material Plant data</td><td>HCM1</td><td>Fulfillment and loading data relevant to later determinations</td></tr>
+            <tr><td>Customer-Material record</td><td>C100 + V100/20 + M-BIKE-01</td><td>Customer number BW-900; customer description; delivery tolerance</td></tr>
+          </tbody>
+        </table>
+
+        <h3>What happens during Sales Order creation</h3>
+        <ol>
+          <li>The user selects Sales Area V100/20/BI and enters Sold-to C100.</li>
+          <li>Partner determination proposes Ship-to C110, Bill-to C120, and Payer C130 from the customer relationship.</li>
+          <li>Sales-area data proposes permitted commercial, shipping, and billing defaults such as payment terms.</li>
+          <li>The user enters customer material BW-900; the customer-material record resolves internal Material M-BIKE-01.</li>
+          <li>Material and customer-material data propose description, unit, and relationship-specific values.</li>
+          <li>The delivering Plant is proposed according to the relevant standard determination and available source data.</li>
+          <li>The Shipping Point is derived from inputs such as delivering Plant, loading group, shipping condition, and Customizing.</li>
+          <li>The resulting values become data of this Sales Order. Permitted manual changes affect the transaction, not the master record.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Build a provenance table, not a vague explanation</h2>
+        <table>
+          <thead><tr><th>Sales Order field</th><th>Likely source</th><th>Operation</th><th>Scope</th></tr></thead>
+          <tbody>
+            <tr><td>Sold-to C100</td><td>User or reference document</td><td>Entered/copied</td><td>Order header</td></tr>
+            <tr><td>Ship-to C110</td><td>C100 partner relationships</td><td>Proposed</td><td>Sales Area; header unless item-specific</td></tr>
+            <tr><td>Payment terms</td><td>Customer sales-area data</td><td>Proposed</td><td>V100/20/BI</td></tr>
+            <tr><td>Internal Material</td><td>Customer-material record</td><td>Resolved from BW-900</td><td>C100 + V100/20 + Material</td></tr>
+            <tr><td>Sales unit</td><td>Material or more-specific customer-material data</td><td>Proposed</td><td>Field-specific</td></tr>
+            <tr><td>Delivering Plant</td><td>Standard Plant proposal using relevant master/document inputs</td><td>Determined</td><td>Item</td></tr>
+            <tr><td>Shipping Point</td><td>Plant + loading group + shipping condition + Customizing</td><td>Derived</td><td>Delivery/shipping context</td></tr>
+          </tbody>
+        </table>
+        <p>
+          “Likely source” is intentionally cautious. To debug a real field,
+          confirm the document type, configuration, current field value,
+          master-data scopes, and release-specific determination rather than
+          assuming every system uses the same precedence.
+        </p>
+      </section>
+
+      <section>
+        <h2>Transfer the design to your RAP portfolio</h2>
+        <pre><code>SalesOrderRequest
+  ├── composition → Items
+  ├── composition → OrderPartners
+  │     └── association → BusinessPartner
+  ├── association → SoldToBusinessPartner
+  ├── association → SalesArea
+  └── association → DeliveringPlant
+
+Item
+  ├── association → Product
+  └── optional association → CustomerProductMapping</code></pre>
+        <p>
+          The master objects remain independent associations. An
+          <code>OrderPartner</code> row, however, can be a composition child if
+          it represents the partner assignment captured for this specific
+          Request. This separates the reusable Business Partner from the
+          transactional fact “C110 is Ship-to for this order.”
+        </p>
+        <p>
+          Decide explicitly which values are only references and which are
+          copied snapshots. If the UI always dereferences the current Business
+          Partner address, historical Requests may appear to change when master
+          data changes. Standard SAP has specialized address behavior; do not
+          imitate it accidentally with a simple association.
+        </p>
+      </section>
+
+      <section>
+        <h2>Your 25-minute source-tracing exercise</h2>
+        <ol>
+          <li>Copy the seven-row provenance table onto paper.</li>
+          <li>For each field, label it <strong>entered</strong>, <strong>copied</strong>, <strong>proposed</strong>, <strong>derived</strong>, or <strong>overridden</strong>.</li>
+          <li>Write the organizational scope of its source.</li>
+          <li>Change the Ship-to from C110 to another permitted partner. Explain why the customer master did not change.</li>
+          <li>Change C100's master payment terms after the order exists. Predict what happens to the existing order and to a newly created order.</li>
+          <li>Remove the customer-material record mentally. Explain which customer-specific convenience disappears while the internal Material can still exist.</li>
+          <li>Draw the RAP model and separate reusable master objects from order-specific partner assignments.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Retrieval questions — answer one at a time</h2>
+        <ol>
+          <li>How does master data differ from transactional Sales Order data?</li>
+          <li>What major source classes can provide or determine Sales Order values?</li>
+          <li>How do BP Category, BP Role, and Partner Function differ?</li>
+          <li>What is the purpose of general, Company Code, and Sales Area BP data?</li>
+          <li>What responsibilities belong to Sold-to, Ship-to, Bill-to, and Payer?</li>
+          <li>Can one Business Partner perform all four functions, and can different partners perform them?</li>
+          <li>Why does Material master data use different views and organizational scopes?</li>
+          <li>What does a customer-material information record represent, and why is it more specific than the Material master?</li>
+          <li>What normally happens to an existing Sales Order after non-address customer master data changes?</li>
+          <li>How should reusable Business Partners and order-specific partner assignments be modeled differently in RAP?</li>
+        </ol>
+        <div class="interview-target">
+          <span class="interview-id">SD master data</span>
+          <p>
+            Use this answer frame: <strong>field → source object →
+            organizational scope → copy/determination → transactional result →
+            later-change behavior</strong>. “It comes from master data” is not
+            sufficiently precise.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Reading route</h2>
+        <p>
+          <strong>Primary reading:</strong>
+          <a href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/identifying-the-source-of-data-in-a-sales-document">SAP Learning — Identifying the Source of Data in a Sales Document</a>.
+        </p>
+        <p>
+          Continue with SAP Learning’s
+          <a href="https://learning.sap.com/courses/exploring-sap-s-4hana-sales-essentials/maintaining-business-partner-master-data_ce0c428f-2cad-4126-9f9a-1a263c3cc41b">Business Partner</a>,
+          <a href="https://learning.sap.com/courses/exploring-sap-s-4hana-sales-essentials/maintaining-material-master-data_db87a1fe-aa83-456b-9540-fd9561195213">Material Master</a>, and
+          <a href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/applying-the-partner-function-concept">Partner Function</a>
+          lessons.
+        </p>
+        <p>
+          <strong>Supporting Tutorial Campus pages:</strong>
+          <a href="https://www.tutorialscampus.com/sap-sd/create-customer-master-record.htm">Customer Master</a>,
+          <a href="https://www.tutorialscampus.com/sap-sd/setup-partner-determination-procedure.htm">Partner Determination</a>,
+          <a href="https://www.tutorialscampus.com/sap-sd/create-material-master-data.htm">Material Master</a>, and
+          <a href="https://www.tutorialscampus.com/sap-sd/create-customer-material-info-record.htm">Customer-Material Info</a>.
+          Use the
+          <a href="../reference/sap-sd-source-map.html">complete SAP SD source map</a>
+          for the entire 12-page master-data cluster.
+        </p>
+      </section>
+
+      <section>
+        <h2>Completion gate</h2>
+        <ul class="checklist">
+          <li>I can distinguish BP Category, BP Role, and Partner Function.</li>
+          <li>I can explain general, Company Code, and Sales Area BP scope.</li>
+          <li>I can assign the four customer partner functions correctly.</li>
+          <li>I can explain why one Material has multiple organizational views.</li>
+          <li>I can explain the specificity of a customer-material record.</li>
+          <li>I can build a provenance row for an entered, copied, proposed, or derived Sales Order field.</li>
+          <li>I can predict the effect of later master-data changes on an existing order.</li>
+          <li>I can separate reusable BP associations from order-specific Partner composition rows in RAP.</li>
+          <li>I answered all ten retrieval questions without reading the definitions.</li>
+        </ul>
+      </section>
+
+      <footer>
+        Previous: <a href="./0012-map-sd-enterprise-structure.html">Lesson 12 — Map Enterprise Structure</a>.
+        Ask your teacher to review the provenance table one row at a time. The
+        next SD lesson will deepen the Sales Order’s header, item, and schedule
+        line structure before document-type and category control.
+      </footer>
+    </main>
+  </body>
+</html>

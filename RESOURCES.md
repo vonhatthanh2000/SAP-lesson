@@ -50,6 +50,10 @@
   Traces sales order, sourcing, delivery, goods issue, billing, payment, and document flow. Use for: Lesson 11 and all end-to-end process explanations.
 - [SAP Learning: Fundamental Customizing in SAP S/4HANA Sales](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales)
   Current first-party coverage of enterprise structure and sales configuration. Use for: verifying classic IMG-oriented secondary tutorials before making configuration claims.
+- [SAP Learning: Identifying the Source of Data in a Sales Document](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/identifying-the-source-of-data-in-a-sales-document)
+  Explains how master data, reference documents, existing document values, Customizing, and runtime control contribute to Sales Order fields. Use for: field-provenance and determination reasoning.
+- [SAP Learning: Applying the Partner Function Concept](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/applying-the-partner-function-concept)
+  Distinguishes partner types and transaction-specific partner functions and shows how master relationships are proposed into documents. Use for: Sold-to, Ship-to, Bill-to, Payer, and partner determination.
 - [SAP Learning Journey: Implementing Sales in SAP S/4HANA Cloud Public Edition](https://learning.sap.com/learning-journeys/implementing-sap-s4hana-cloud-public-edition-sales)
   Consultant-oriented implementation path including sales processes, delivery scheduling, availability, third-party sales, and other core functions. Use for: shaping the later deep-SD sequence.
 - [Tutorial Campus: SAP SD Tutorial](https://www.tutorialscampus.com/sap-sd/)

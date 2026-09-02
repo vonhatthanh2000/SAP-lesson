@@ -29,6 +29,10 @@ Business-action lesson: [Lesson 10 — Control Status with RAP Actions](./lesson
 
 SD foundation lesson: [Lesson 11 — Trace the SD Order-to-Cash Flow](./lessons/0011-trace-sd-order-to-cash.html). This begins an SD expansion track without replacing the RAP portfolio roadmap. First learn the document handoffs; later lessons return to enterprise structure, master data, document control, pricing, fulfillment, billing, and credit.
 
+SD enterprise-structure lesson: [Lesson 12 — Decide Who Sells What, How, and From Where](./lessons/0012-map-sd-enterprise-structure.html). Begin after you can distinguish order, delivery, PGI, billing, and payment and explain partial fulfillment from memory.
+
+SD master-data lesson: [Lesson 13 — Trace Sales Order Data to Its Source](./lessons/0013-trace-sales-order-master-data.html). Begin after you can reconstruct Sales Area and Distribution Chain and distinguish commercial permission from fulfillment execution.
+
 ## Course documents
 
 - [Mission](./MISSION.md) — the outcome every lesson must serve.

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 12 — Map the SAP SD Enterprise Structure</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 12 · 75–90 minutes · SAP SD enterprise structure</div>
+        <h1>Decide who may sell what, how, and from where</h1>
+        <p class="lede">
+          Turn organizational-unit vocabulary into a transaction map. Given a
+          selling scenario, identify the legal accounting unit, sales area,
+          delivering plant, and shipping point—and reject combinations the
+          enterprise structure does not permit.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite gate</h2>
+        <p>
+          Begin after you can trace Sales Order → Outbound Delivery → PGI →
+          Billing → Payment and distinguish SD document flow from RAP
+          composition. Review the
+          <a href="../lesson-notes/0011-sd-order-to-cash-recap.md">Lesson 11 recap</a>
+          if those boundaries are not yet automatic.
+        </p>
+        <div class="callout success">
+          <p>
+            <strong>Tangible win:</strong> for a proposed sale, answer six
+            questions without guessing: Which legal entity records it? Who
+            sells? Through which channel? What product line? Which plant can
+            supply it? Which shipping unit executes the delivery?
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Enterprise structure is a control model, not merely an org chart</h2>
+        <p>
+          SAP organizational units do more than describe reporting lines. Their
+          assignments constrain valid transactions and provide dimensions for
+          master data, responsibility, authorization, pricing, fulfillment,
+          reporting, and financial integration. SAP describes organizational
+          units as the system representation of legal and operational units in
+          the enterprise:
+          <a href="https://learning.sap.com/courses/exploring-sap-s-4hana-sales-essentials/identifying-organizational-units-in-sap-s-4hana-sales_ddb48d1e-1f57-46bd-8d13-d8e4ef6d0560">Identifying Organizational Units in SAP S/4HANA Sales</a>.
+        </p>
+        <div class="callout">
+          <p>
+            Ask what each unit <strong>controls</strong>, not only what it is
+            called. “Vietnam Sales” is ambiguous until you know whether it is a
+            company code, sales organization, sales office, or merely a label.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The six questions</h2>
+        <table>
+          <thead><tr><th>Business question</th><th>Organizational unit</th><th>Core meaning</th></tr></thead>
+          <tbody>
+            <tr><td>Which independent accounting unit records the result?</td><td>Company Code</td><td>The legal/accounting context for complete financial statements.</td></tr>
+            <tr><td>Who is responsible for selling?</td><td>Sales Organization</td><td>The central SD selling unit responsible for sales and distribution.</td></tr>
+            <tr><td>How do goods or services reach the customer?</td><td>Distribution Channel</td><td>The route-to-market strategy, such as direct, retail, or wholesale.</td></tr>
+            <tr><td>What product or service family is sold?</td><td>Division</td><td>A grouping of saleable materials or services.</td></tr>
+            <tr><td>From which operational location can fulfillment occur?</td><td>Plant</td><td>A location that can produce, distribute, or provide goods/services.</td></tr>
+            <tr><td>Which shipping unit processes the delivery?</td><td>Shipping Point</td><td>The highest-level organizational unit for shipping execution.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>The formula to remember</h2>
+        <div class="flow" aria-label="Sales area formula">
+          <span>Sales Organization</span><i>+</i>
+          <span>Distribution Channel</span><i>+</i>
+          <span>Division</span><i>=</i>
+          <span>Sales Area</span>
+        </div>
+        <pre><code>Sales Area = WHO sells + HOW it is sold + WHAT is sold</code></pre>
+        <p>
+          A sales area is one configured combination of exactly one sales
+          organization, one distribution channel, and one division. It is not
+          a fourth independent branch of the hierarchy. SAP uses this
+          combination to express who may sell what and how; sales employees and
+          sales-area-dependent master data can also be scoped to it.
+        </p>
+        <div class="flow" aria-label="Distribution chain formula">
+          <span>Sales Organization</span><i>+</i>
+          <span>Distribution Channel</span><i>=</i>
+          <span>Distribution Chain</span>
+        </div>
+        <p>
+          A distribution chain answers only <strong>who + how</strong>. It does
+          not contain the division. This distinction matters because delivering
+          plants are assigned to a sales organization/distribution-channel
+          combination. SAP’s current customizing lesson explains that a plant
+          can serve multiple distribution chains and may even belong to a
+          different company code in a cross-company scenario:
+          <a href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/setting-up-the-enterprise-structure-in-sales-and-distribution">Setting Up the Enterprise Structure in Sales and Distribution</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Assignment rules worth reasoning about</h2>
+        <table>
+          <thead><tr><th>Assignment</th><th>Consequence</th><th>Reasoning cue</th></tr></thead>
+          <tbody>
+            <tr><td>Sales Organization → Company Code</td><td>Each sales organization is uniquely assigned to one company code; one company code can have multiple sales organizations.</td><td>Which legal books receive the sales result?</td></tr>
+            <tr><td>Distribution Channel ↔ Sales Organization</td><td>A channel must be assigned before that sales organization can use it.</td><td>Is this route to market allowed for this seller?</td></tr>
+            <tr><td>Division ↔ Sales Organization</td><td>The seller can be permitted to handle multiple product/service groups.</td><td>Is this seller responsible for this product family?</td></tr>
+            <tr><td>Sales Org + Channel + Division</td><td>The valid combination forms a Sales Area.</td><td>Is this exact who/how/what combination configured?</td></tr>
+            <tr><td>Distribution Chain ↔ Plant</td><td>The plant is allowed to deliver for that seller and channel.</td><td>Can this route to market use stock or service from this location?</td></tr>
+            <tr><td>Shipping Point ↔ Plant</td><td>Shipping execution is available for that plant.</td><td>Which dispatch unit can process this delivery?</td></tr>
+          </tbody>
+        </table>
+        <p>
+          A plant is not part of the Sales Area formula, and a shipping point is
+          not a synonym for a plant. Each outbound delivery is processed by one
+          shipping point, while a plant can have multiple shipping points. The
+          shipping point used for a transaction is determined from shipping
+          context; detailed determination belongs in a later fulfillment lesson.
+        </p>
+      </section>
+
+      <section>
+        <h2>Worked company: Velora Vietnam</h2>
+        <p>Assume the implementation team has configured the following structure:</p>
+        <table>
+          <thead><tr><th>Unit</th><th>Code</th><th>Meaning</th></tr></thead>
+          <tbody>
+            <tr><td>Company Code</td><td><code>VN01</code></td><td>Velora Vietnam legal/accounting entity</td></tr>
+            <tr><td>Sales Organization</td><td><code>V100</code></td><td>Vietnam Domestic Sales</td></tr>
+            <tr><td>Distribution Channels</td><td><code>10</code>, <code>20</code></td><td>Direct Sales, Wholesale</td></tr>
+            <tr><td>Divisions</td><td><code>BI</code>, <code>SP</code></td><td>Bicycles, Spare Parts</td></tr>
+            <tr><td>Plants</td><td><code>HCM1</code>, <code>HAN1</code></td><td>Ho Chi Minh and Hanoi fulfillment plants</td></tr>
+            <tr><td>Shipping Points</td><td><code>HCMP</code>, <code>HCMT</code>, <code>HANT</code></td><td>HCM parcel, HCM truck, Hanoi truck</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Configured Sales Areas</h3>
+        <table>
+          <thead><tr><th>Sales Org</th><th>Channel</th><th>Division</th><th>Business meaning</th></tr></thead>
+          <tbody>
+            <tr><td>V100</td><td>10 Direct</td><td>BI Bicycles</td><td>Sell bicycles directly.</td></tr>
+            <tr><td>V100</td><td>20 Wholesale</td><td>BI Bicycles</td><td>Sell bicycles to wholesale customers.</td></tr>
+            <tr><td>V100</td><td>20 Wholesale</td><td>SP Spare Parts</td><td>Sell spare parts through wholesale.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Notice what is absent: <code>V100 / 10 / SP</code>. The company has a
+          Direct channel and a Spare Parts division, but that does not
+          automatically make their combination a valid Sales Area.
+        </p>
+
+        <h3>Configured fulfillment assignments</h3>
+        <table>
+          <thead><tr><th>Distribution Chain</th><th>Allowed Plant</th><th>Plant's Shipping Points</th></tr></thead>
+          <tbody>
+            <tr><td>V100 / 10 Direct</td><td>HCM1</td><td>HCMP, HCMT</td></tr>
+            <tr><td>V100 / 20 Wholesale</td><td>HCM1</td><td>HCMP, HCMT</td></tr>
+            <tr><td>V100 / 20 Wholesale</td><td>HAN1</td><td>HANT</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Trace three proposed sales</h2>
+        <table>
+          <thead><tr><th>Proposal</th><th>Decision</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Direct bicycle sale from HCM1</td><td>Structurally valid</td><td>V100/10/BI exists, and HCM1 is assigned to distribution chain V100/10.</td></tr>
+            <tr><td>Direct spare-parts sale</td><td>Structurally invalid</td><td>V100/10/SP is not a configured Sales Area. The existence of each individual unit is insufficient.</td></tr>
+            <tr><td>Wholesale spare-parts sale from HAN1</td><td>Structurally valid</td><td>V100/20/SP exists, and HAN1 is assigned to distribution chain V100/20.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <p>
+            Enterprise structure answers whether the organizational path is
+            allowed. It does not by itself guarantee a successful order.
+            Customer/material sales-area data, partner functions, stock,
+            availability, pricing, credit, and other controls can still stop or
+            alter processing.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Where Sales Office and Sales Group fit</h2>
+        <p>
+          A Sales Office commonly represents a regional or physical sales
+          location. A Sales Group represents an area of responsibility or team
+          within a sales office. They support responsibility assignment,
+          analytics, and selection, but neither is part of the Sales Area
+          formula.
+        </p>
+        <pre><code>Sales Area = Sales Organization + Distribution Channel + Division
+
+Not included: Sales Office, Sales Group, Plant, Shipping Point</code></pre>
+        <p>
+          This distinction is confirmed in SAP’s current
+          <a href="https://help.sap.com/docs/CENTRAL_BUSINESS_CONFIGURATION/55c9333eed324cd284f6c4e5dab8462f/dcc34e55aa0c4444a14ba8e969b88561.html">Sales Organization reference</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Transfer the idea to your RAP portfolio</h2>
+        <p>
+          Organizational references are independently meaningful master or
+          configuration data. They normally should not become composition
+          children of your custom SalesOrderRequest.
+        </p>
+        <pre><code>SalesOrderRequest
+  ├── composition → Items
+  ├── association → Customer / Business Partner
+  ├── association → Sales Area reference
+  └── association → Delivering Plant reference</code></pre>
+        <p>
+          A validation can reject a Request whose selected Sales Area is not
+          allowed, but do not invent standard SD determination rules inside the
+          portfolio and claim that they reproduce S/4HANA. Document the custom
+          simplification and keep standard integration behind a released API or
+          explicit adapter.
+        </p>
+      </section>
+
+      <section>
+        <h2>Your 20-minute mapping exercise</h2>
+        <ol>
+          <li>Draw six boxes labeled Company Code, Sales Organization, Distribution Channel, Division, Plant, and Shipping Point.</li>
+          <li>Write the question answered by each unit beneath its box.</li>
+          <li>Circle Sales Organization + Distribution Channel + Division and label the combination “Sales Area.”</li>
+          <li>Circle Sales Organization + Distribution Channel and label it “Distribution Chain.”</li>
+          <li>Connect each allowed distribution chain to its plants, then each plant to its shipping points.</li>
+          <li>Explain why V100/10/SP is invalid even though V100, 10, and SP each exist separately.</li>
+        </ol>
+        <p>
+          Finally, invent one second company code and one cross-company plant
+          scenario. State which assignment would make the fulfillment path
+          possible, but do not assume the complete intercompany process is
+          configured merely because that assignment exists.
+        </p>
+      </section>
+
+      <section>
+        <h2>Retrieval questions — answer one at a time</h2>
+        <ol>
+          <li>How do Company Code and Sales Organization differ?</li>
+          <li>What three units form a Sales Area, and what does each contribute?</li>
+          <li>What is the difference between a Sales Area and a Distribution Chain?</li>
+          <li>Why is a Plant not part of the Sales Area formula?</li>
+          <li>What does assigning a Plant to a Distribution Chain permit?</li>
+          <li>How do Plant and Shipping Point differ?</li>
+          <li>Why can the existence of three units still fail to produce a valid Sales Area?</li>
+          <li>Where do Sales Office and Sales Group fit, and why are they excluded from the Sales Area formula?</li>
+          <li>For V100/10/SP, identify the missing enterprise-structure fact.</li>
+          <li>In a custom RAP SalesOrderRequest, which relationships are compositions and which are associations?</li>
+        </ol>
+        <div class="interview-target">
+          <span class="interview-id">SD enterprise structure</span>
+          <p>
+            Use this answer frame: <strong>business question → organizational
+            unit → assignment → transaction consequence → example</strong>.
+            Avoid defining every unit as merely “a part of the company.”
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Reading route</h2>
+        <p>
+          <strong>Primary reading:</strong>
+          <a href="https://learning.sap.com/courses/exploring-sap-s-4hana-sales-essentials/identifying-organizational-units-in-sap-s-4hana-sales_ddb48d1e-1f57-46bd-8d13-d8e4ef6d0560">SAP Learning — Identifying Organizational Units in SAP S/4HANA Sales</a>.
+        </p>
+        <p>
+          <strong>Primary configuration follow-up:</strong>
+          <a href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/setting-up-the-enterprise-structure-in-sales-and-distribution">SAP Learning — Setting Up the Enterprise Structure in Sales and Distribution</a>.
+        </p>
+        <p>
+          <strong>Supporting Tutorial Campus pages:</strong>
+          <a href="https://www.tutorialscampus.com/sap-sd/enterprise-structure.htm">Enterprise Structure</a>,
+          <a href="https://www.tutorialscampus.com/sap-sd/define-sales-area.htm">Define Sales Area</a>,
+          <a href="https://www.tutorialscampus.com/sap-sd/assign-sales-organization-distribution-channel-to-plant.htm">Assign Distribution Chain to Plant</a>, and
+          <a href="https://www.tutorialscampus.com/sap-sd/assign-shipping-point-to-plant.htm">Assign Shipping Point to Plant</a>.
+          The
+          <a href="../reference/sap-sd-source-map.html">complete SAP SD source map</a>
+          indexes all 19 enterprise-structure pages.
+        </p>
+      </section>
+
+      <section>
+        <h2>Completion gate</h2>
+        <ul class="checklist">
+          <li>I can reproduce both the Sales Area and Distribution Chain formulas.</li>
+          <li>I can answer who, how, what, legal entity, fulfillment location, and shipping owner.</li>
+          <li>I can reject an invalid organizational combination and name the missing assignment.</li>
+          <li>I can distinguish Plant from Shipping Point.</li>
+          <li>I can explain why Sales Office and Sales Group are not part of a Sales Area.</li>
+          <li>I can model organizational references as associations rather than composition children.</li>
+          <li>I answered all ten retrieval questions aloud without reading the definitions.</li>
+        </ul>
+      </section>
+
+      <footer>
+        Previous: <a href="./0011-trace-sd-order-to-cash.html">Lesson 11 — Trace Order-to-Cash</a>.
+        Review the completed retrieval set in the
+        <a href="../lesson-notes/0012-sd-enterprise-structure-recap.md">Lesson 12 recap and active-recall notes</a>.
+        Ask your teacher to test you one question at a time after the mapping
+        exercise. Next:
+        <a href="./0013-trace-sales-order-master-data.html">Lesson 13 — Trace Sales Order Data to Its Source</a>.
+      </footer>
+    </main>
+  </body>
+</html>
