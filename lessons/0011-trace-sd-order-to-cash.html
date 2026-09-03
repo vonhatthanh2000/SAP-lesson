@@ -157,6 +157,48 @@
       </section>
 
       <section>
+        <h2>Technical-consultant lens: transactions, persistence, and runtime effects</h2>
+        <p>
+          Transaction codes are useful entry points in SAP GUI, but a
+          technical consultant must connect each transaction to the business
+          object, persistence footprint, posting effect, and supported
+          integration contract.
+        </p>
+        <table>
+          <thead><tr><th>Stage</th><th>Classic SAP GUI transactions</th><th>Persistence landmarks</th><th>Technical effect to trace</th></tr></thead>
+          <tbody>
+            <tr><td>Inquiry</td><td><code>VA11</code> / <code>VA12</code> / <code>VA13</code></td><td><code>VBAK</code>, <code>VBAP</code></td><td>Creates a presales document; no inventory or FI posting.</td></tr>
+            <tr><td>Quotation</td><td><code>VA21</code> / <code>VA22</code> / <code>VA23</code></td><td><code>VBAK</code>, <code>VBAP</code></td><td>Creates an offer that may become a reference document.</td></tr>
+            <tr><td>Sales Order</td><td><code>VA01</code> / <code>VA02</code> / <code>VA03</code>; list via <code>VA05</code></td><td><code>VBAK</code>, <code>VBAP</code>, <code>VBEP</code></td><td>Stores demand, commercial data, confirmations, and processing status.</td></tr>
+            <tr><td>Outbound Delivery</td><td><code>VL01N</code> / <code>VL02N</code> / <code>VL03N</code></td><td><code>LIKP</code>, <code>LIPS</code></td><td>Creates the shipping execution document.</td></tr>
+            <tr><td>Post Goods Issue</td><td>Usually executed from <code>VL02N</code></td><td><code>MATDOC</code> in S/4HANA; accounting documents when relevant</td><td>Posts goods movement, updates inventory, and can create value postings.</td></tr>
+            <tr><td>Billing</td><td><code>VF01</code> / <code>VF02</code> / <code>VF03</code></td><td><code>VBRK</code>, <code>VBRP</code>; FI document linkage</td><td>Creates the billing document and normally posts receivable and revenue to FI.</td></tr>
+            <tr><td>Incoming Payment</td><td><code>F-28</code>; display accounting document via <code>FB03</code></td><td><code>BKPF</code>, accounting line-item model including <code>ACDOCA</code></td><td>Posts cash and clears an open customer receivable.</td></tr>
+            <tr><td>Document Flow</td><td>Display from <code>VA03</code>, <code>VL03N</code>, or <code>VF03</code></td><td><code>VBFA</code> is the classic relationship landmark</td><td>Links predecessor and successor documents; it is not a single status column.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <p>
+            <strong>S/4HANA caution:</strong> classic tables and transactions
+            are debugging landmarks for systems that expose them. Do not
+            design a clean-core integration by updating these tables directly.
+            In ABAP Cloud or SAP S/4HANA Cloud, use released CDS views,
+            business objects, events, and APIs available for the target
+            edition. SAP publishes current Sales interfaces in
+            <a href="https://help.sap.com/docs/sap_s4hana_cloud/03c04db2a7434731b7fe21dca77440da/f67705a25e2b440f90a25faaffa5ffef.html">APIs for Sales</a>.
+          </p>
+        </div>
+        <h3>Failure-tracing sequence</h3>
+        <ol>
+          <li>Start with the business symptom and identify the last document that exists.</li>
+          <li>Open that document and inspect its status, blocks, quantities, and document flow.</li>
+          <li>Decide whether the missing result is a document creation, goods movement, accounting posting, or clearing event.</li>
+          <li>Inspect the responsible document level and source configuration; do not begin with a random table.</li>
+          <li>For an interface failure, compare the API response and application log with the actual committed document state.</li>
+        </ol>
+      </section>
+
+      <section>
         <h2>Your 15-minute tracing exercise</h2>
         <p>
           Without looking at the table above, draw seven boxes from customer
@@ -197,6 +239,14 @@
             answer that is only a list of transaction codes.
           </p>
         </div>
+        <h3>Technical-consultant checkpoint</h3>
+        <ol>
+          <li>Which transaction would you use to display the Sales Order, delivery, billing document, and accounting document?</li>
+          <li>Which persistence landmarks correspond to Sales Order, delivery, billing, and cross-document flow?</li>
+          <li>Why does finding a delivery row not prove that PGI was posted?</li>
+          <li>Which committed artifacts would you expect after billing, and which additional event proves payment?</li>
+          <li>Why should an extension use a released API instead of directly updating <code>VBAK</code>, <code>LIKP</code>, or <code>VBRK</code>?</li>
+        </ol>
       </section>
 
       <section>
@@ -227,6 +277,8 @@
           <li>I can separate billing from incoming payment.</li>
           <li>I can classify data as header, item, or schedule-line level.</li>
           <li>I can explain why document flow is not one giant aggregate.</li>
+          <li>I can connect each process step to its classic transaction, persistence landmark, and posting effect.</li>
+          <li>I can explain why direct table updates are not a supported clean-core integration contract.</li>
           <li>I answered the ten questions aloud and corrected weak answers.</li>
         </ul>
       </section>

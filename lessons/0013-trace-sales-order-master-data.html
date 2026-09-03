@@ -283,6 +283,47 @@ Item
       </section>
 
       <section>
+        <h2>Technical-consultant lens: maintain, inspect, and trace master data</h2>
+        <table>
+          <thead><tr><th>Master-data object</th><th>Classic/S/4 transaction landmark</th><th>Persistence landmarks</th><th>Scope clue</th></tr></thead>
+          <tbody>
+            <tr><td>Business Partner / Customer</td><td><code>BP</code>; older customer transactions include <code>XD*</code> and <code>VD*</code></td><td><code>BUT000</code>, <code>KNA1</code>, <code>KNB1</code>, <code>KNVV</code></td><td>General, Company Code, and Sales Area segments are distinct.</td></tr>
+            <tr><td>Customer partner functions</td><td>Maintain through <code>BP</code>; configure determination with <code>VOPAN</code></td><td><code>KNVP</code> is a classic customer partner-function landmark</td><td>Sales Area and partner-determination context matter.</td></tr>
+            <tr><td>Material / Product</td><td><code>MM01</code> / <code>MM02</code> / <code>MM03</code></td><td><code>MARA</code>, <code>MVKE</code>, <code>MARC</code>, <code>MBEW</code></td><td>General, Distribution Chain, Plant, and valuation scopes differ.</td></tr>
+            <tr><td>Stock overview</td><td><code>MMBE</code></td><td>Stock model is release-dependent; <code>MATDOC</code> is central in S/4HANA</td><td>Stock is not the same thing as Material master existence.</td></tr>
+            <tr><td>Customer-material information</td><td><code>VD51</code> / <code>VD52</code> / <code>VD53</code></td><td><code>KNMT</code></td><td>Customer + Sales Org + Distribution Channel + Material.</td></tr>
+            <tr><td>Pricing condition record</td><td><code>VK11</code> / <code>VK12</code> / <code>VK13</code></td><td>Condition technique; persistence differs between classic ERP and S/4HANA</td><td>Condition-table key and validity period determine specificity.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          SAP S/4HANA uses Business Partner as the central maintenance entry
+          point for customer roles. Classic customer tables remain valuable
+          diagnostic landmarks, but Customer/Vendor Integration and the target
+          edition determine how the data is synchronized and exposed. SAP Help
+          also documents <code>VD51</code> and <code>VD52</code> for
+          <a href="https://help.sap.com/docs/sisgw/sap-integration-suite-managed-gateway-for-spend-management-and-sap-business-network-configuration-guide-for-erp-integration-for-suppliers/how-to-create-customer-material-information">customer-material information</a>.
+        </p>
+        <h3>Field-source debugging workflow</h3>
+        <ol>
+          <li>Open the order in <code>VA03</code> and identify the field's document level and current value.</li>
+          <li>Record the Sold-to/Payer, Sales Area, Material, Plant, document type, and reference document.</li>
+          <li>Inspect the matching master-data segment—not merely the general BP or Material record.</li>
+          <li>Check whether a more-specific source such as customer-material data, partner determination, pricing, or a reference document overrides the general proposal.</li>
+          <li>Compare creation-time source data with current master data; the order normally stores the accepted transactional value.</li>
+          <li>Only then inspect enhancements, BAdIs, APIs, or custom code that may alter the standard result.</li>
+        </ol>
+        <div class="callout">
+          <p>
+            <strong>Read tables; never update them directly.</strong> A direct
+            update can bypass validation, change documents, buffering,
+            synchronization, and business-object invariants. For integrations,
+            prefer released Business Partner, Product, and Sales Order APIs or
+            CDS entities supported by the target system.
+          </p>
+        </div>
+      </section>
+
+      <section>
         <h2>Your 25-minute source-tracing exercise</h2>
         <ol>
           <li>Copy the seven-row provenance table onto paper.</li>
@@ -318,6 +359,14 @@ Item
             sufficiently precise.
           </p>
         </div>
+        <h3>Technical-consultant checkpoint</h3>
+        <ol>
+          <li>Which transaction is the central S/4HANA maintenance entry point for customer Business Partners?</li>
+          <li>How do <code>KNA1</code>, <code>KNB1</code>, and <code>KNVV</code> reflect different customer scopes?</li>
+          <li>Which Material tables distinguish general, sales, Plant, and valuation data?</li>
+          <li>Which transaction and table would help inspect customer-material mapping?</li>
+          <li>Why must you compare organizational keys before concluding that master data is missing?</li>
+        </ol>
       </section>
 
       <section>
@@ -356,15 +405,18 @@ Item
           <li>I can build a provenance row for an entered, copied, proposed, or derived Sales Order field.</li>
           <li>I can predict the effect of later master-data changes on an existing order.</li>
           <li>I can separate reusable BP associations from order-specific Partner composition rows in RAP.</li>
+          <li>I can connect BP, Material, partner, and customer-material concepts to their maintenance and persistence landmarks.</li>
+          <li>I can trace a proposed field without directly updating standard tables.</li>
           <li>I answered all ten retrieval questions without reading the definitions.</li>
         </ul>
       </section>
 
       <footer>
         Previous: <a href="./0012-map-sd-enterprise-structure.html">Lesson 12 — Map Enterprise Structure</a>.
-        Ask your teacher to review the provenance table one row at a time. The
-        next SD lesson will deepen the Sales Order’s header, item, and schedule
-        line structure before document-type and category control.
+        Review the completed retrieval set in the
+        <a href="../lesson-notes/0013-sd-sales-order-master-data-recap.md">Lesson 13 recap and active-recall notes</a>.
+        Ask your teacher to review the provenance table one row at a time.
+        Next: <a href="./0014-place-sales-order-data-at-the-correct-level.html">Lesson 14 — Place Sales Order Data at the Correct Level</a>.
       </footer>
     </main>
   </body>

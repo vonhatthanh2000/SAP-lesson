@@ -52,6 +52,14 @@
   Current first-party coverage of enterprise structure and sales configuration. Use for: verifying classic IMG-oriented secondary tutorials before making configuration claims.
 - [SAP Learning: Identifying the Source of Data in a Sales Document](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/identifying-the-source-of-data-in-a-sales-document)
   Explains how master data, reference documents, existing document values, Customizing, and runtime control contribute to Sales Order fields. Use for: field-provenance and determination reasoning.
+- [SAP Learning: Executing Sales Order Management](https://learning.sap.com/courses/executing-basic-erp-processes-with-sap-s-4hana/executing-sales-order-management)
+  Explains Sales Order header, item, and schedule-line scope and connects confirmations to sourcing. Use for: the Sales document hierarchy and scope reasoning.
+- [SAP Help: Relationship Between Header and Items](https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/5664b65334e6b54ce10000000a174cb4.html)
+  Documents how selected header values are copied and propagated to aligned items while item differences act as exceptions. Use for: header defaults and item overrides.
+- [SAP Help: Sales Order Item Schedule Line](https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/37df44581efca007e10000000a441470.html)
+  Defines a schedule line as an item subdivision by quantity and date and lists requested, confirmed, delivered, and open fields. Use for: schedule-line semantics and API-oriented field inspection.
+- [SAP Learning: Running an Available-to-Promise Check](https://learning.sap.com/courses/performing-the-availability-check/running-an-available-to-promise-atp-check-in-sap-s-4hana-sales_a2b4c5e3-1618-418d-a4f6-efe5ff43f7f1)
+  Explains how availability-check results become confirmed or unconfirmed schedule-line quantities and dates. Use for: connecting ATP outcomes to fulfillment commitments.
 - [SAP Learning: Applying the Partner Function Concept](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/applying-the-partner-function-concept)
   Distinguishes partner types and transaction-specific partner functions and shows how master relationships are proposed into documents. Use for: Sold-to, Ship-to, Bill-to, Payer, and partner determination.
 - [SAP Learning Journey: Implementing Sales in SAP S/4HANA Cloud Public Edition](https://learning.sap.com/learning-journeys/implementing-sap-s4hana-cloud-public-edition-sales)

@@ -229,6 +229,62 @@ Not included: Sales Office, Sales Group, Plant, Shipping Point</code></pre>
       </section>
 
       <section>
+        <h2>Technical-consultant lens: Customizing creates the allowed graph</h2>
+        <p>
+          Enterprise structure is primarily configuration, not transactional
+          application data. In classic SAP GUI systems, <code>SPRO</code> opens
+          the Implementation Guide. The direct transactions below are useful
+          landmarks; availability and preferred configuration tooling depend
+          on the S/4HANA edition and release.
+        </p>
+        <table>
+          <thead><tr><th>Configuration object or assignment</th><th>Classic transaction</th><th>Table/view landmark</th></tr></thead>
+          <tbody>
+            <tr><td>Company Code</td><td><code>OX02</code></td><td><code>T001</code></td></tr>
+            <tr><td>Define Sales Organization</td><td><code>OVX5</code></td><td><code>TVKO</code></td></tr>
+            <tr><td>Assign Sales Organization to Company Code</td><td><code>OVX3N</code></td><td>Company Code assignment in <code>TVKO</code></td></tr>
+            <tr><td>Define Distribution Channel</td><td><code>OVXI</code></td><td><code>TVTW</code></td></tr>
+            <tr><td>Define Division</td><td><code>OVXB</code></td><td><code>TSPA</code></td></tr>
+            <tr><td>Set up Sales Area combination</td><td><code>OVXGN</code></td><td><code>TVTA</code></td></tr>
+            <tr><td>Define Plant</td><td><code>OX10</code></td><td><code>T001W</code></td></tr>
+            <tr><td>Assign Distribution Chain to Plant</td><td><code>OVX6N</code></td><td><code>TVKWZ</code></td></tr>
+            <tr><td>Define Shipping Point</td><td><code>OVXD</code></td><td><code>TVST</code></td></tr>
+            <tr><td>Assign Shipping Point to Plant</td><td><code>OVXC</code></td><td><code>TVSWZ</code></td></tr>
+          </tbody>
+        </table>
+        <p>
+          The direct transactions and table names are confirmed here as
+          classic-system navigation aids by the linked Tutorial Campus pages
+          for
+          <a href="https://www.tutorialscampus.com/sap-sd/define-sales-organization.htm">Sales Organization</a>,
+          <a href="https://www.tutorialscampus.com/sap-sd/define-sales-area.htm">Sales Area</a>,
+          <a href="https://www.tutorialscampus.com/sap-sd/assign-sales-organization-distribution-channel-to-plant.htm">Plant assignment</a>, and
+          <a href="https://www.tutorialscampus.com/sap-sd/assign-shipping-point-to-plant.htm">Shipping Point assignment</a>.
+          Treat SAP Learning and SAP Help as the authority for current
+          S/4HANA meaning and edition-specific configuration.
+        </p>
+        <h3>What a technical failure means</h3>
+        <table>
+          <thead><tr><th>Symptom</th><th>First configuration question</th><th>Do not conclude yet</th></tr></thead>
+          <tbody>
+            <tr><td>Sales Area rejected</td><td>Does the exact Sales Org/Channel/Division entry exist?</td><td>That one of the individual units is missing.</td></tr>
+            <tr><td>Plant cannot be used</td><td>Is the Plant assigned to the order's Distribution Chain?</td><td>That Plant master data alone permits fulfillment.</td></tr>
+            <tr><td>Shipping Point not determined</td><td>Are Plant assignment and determination inputs/configuration complete?</td><td>That creating the Shipping Point was sufficient.</td></tr>
+            <tr><td>Works in one client, fails in another</td><td>Was the relevant Customizing transported and activated consistently?</td><td>That application code must be different.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <p>
+            Never repair enterprise structure with direct SQL. Customizing
+            transactions maintain validation, dependent entries, and transport
+            recording. In SAP S/4HANA Cloud Public Edition, use the supported
+            configuration activities rather than assuming every classic
+            <code>OV*</code> transaction is available.
+          </p>
+        </div>
+      </section>
+
+      <section>
         <h2>Your 20-minute mapping exercise</h2>
         <ol>
           <li>Draw six boxes labeled Company Code, Sales Organization, Distribution Channel, Division, Plant, and Shipping Point.</li>
@@ -268,6 +324,14 @@ Not included: Sales Office, Sales Group, Plant, Shipping Point</code></pre>
             Avoid defining every unit as merely “a part of the company.”
           </p>
         </div>
+        <h3>Technical-consultant checkpoint</h3>
+        <ol>
+          <li>Which Customizing entry proves that <code>V100/10/SP</code> is a valid Sales Area?</li>
+          <li>Which transaction and table landmark would you use to inspect a Sales Area?</li>
+          <li>How do <code>TVKWZ</code> and <code>TVSWZ</code> answer different assignment questions?</li>
+          <li>Why can a configuration work in development but fail after transport to quality?</li>
+          <li>Why is direct table maintenance a poor fix even when you know the relevant table?</li>
+        </ol>
       </section>
 
       <section>
@@ -301,6 +365,8 @@ Not included: Sales Office, Sales Group, Plant, Shipping Point</code></pre>
           <li>I can distinguish Plant from Shipping Point.</li>
           <li>I can explain why Sales Office and Sales Group are not part of a Sales Area.</li>
           <li>I can model organizational references as associations rather than composition children.</li>
+          <li>I can navigate the principal classic Customizing transactions and identify their table landmarks.</li>
+          <li>I can distinguish a missing definition, a missing assignment, and a transport inconsistency.</li>
           <li>I answered all ten retrieval questions aloud without reading the definitions.</li>
         </ul>
       </section>
