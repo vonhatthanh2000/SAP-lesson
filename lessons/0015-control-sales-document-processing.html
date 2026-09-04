@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 15 — Control Sales Document Processing</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">
+          Lesson 15 · 90–105 minutes · SAP SD document control
+        </div>
+        <h1>Control one Sales Order at three levels</h1>
+        <p class="lede">
+          Trace how the sales document type controls the transaction, the item
+          category controls each product line, and the schedule-line category
+          controls fulfillment behavior—then diagnose why SAP selected them.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite and tangible win</h2>
+        <p>
+          Begin after you can distinguish Sales Order header, item, and
+          schedule-line grain. Review the
+          <a href="../lesson-notes/0014-sd-sales-document-levels-recap.md"
+            >Lesson 14 recap</a
+          >
+          if those levels are not yet automatic.
+        </p>
+        <div class="callout success">
+          <p>
+            <strong>By the end:</strong> given a Sales Order item that is not
+            priced, confirmed, or delivery relevant, you can reconstruct the two
+            configuration lookups and decide whether the error is in the
+            selected category, its control settings, or its master-data inputs.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The complete control chain</h2>
+        <pre><code>Header: Sales document type
+  │
+  ├─ with material item-category group, usage, higher-level item
+  ▼
+Item: Item category
+  │
+  ├─ with material/plant MRP type
+  ▼
+Schedule line: Schedule-line category
+  │
+  └─ controls fulfillment participation</code></pre>
+        <p>
+          These are not three names for the same thing. Each is a configuration
+          switch at a different business grain. SAP summarizes this division in
+          <a
+            href="https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/c264b65334e6b54ce10000000a174cb4.html"
+            >How Sales Documents Are Controlled</a
+          >.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Level</th>
+              <th>Question it answers</th>
+              <th>Examples of influence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Sales document type</td>
+              <td>What commercial transaction is this?</td>
+              <td>
+                Document category, defaults, blocks, checks, follow-on document
+                proposals
+              </td>
+            </tr>
+            <tr>
+              <td>Item category</td>
+              <td>How does this particular line participate?</td>
+              <td>
+                Pricing, billing relevance, business-data differences,
+                text/material behavior, schedule lines
+              </td>
+            </tr>
+            <tr>
+              <td>Schedule-line category</td>
+              <td>How does this dated quantity participate in logistics?</td>
+              <td>
+                Delivery relevance, requirements transfer, ATP, movement type,
+                procurement
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>1. Sales document type: control the transaction</h2>
+        <p>
+          The sales document type applies at header level. It distinguishes
+          processes such as inquiry, quotation, standard order, returns, or
+          contracts. Its settings can supply defaults and influence document
+          category, delivery or billing blocks, checks, and proposed subsequent
+          document types. See SAP Learning's
+          <a
+            href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/configuring-a-sales-document-type"
+            >Configuring a Sales Document Type</a
+          >.
+        </p>
+        <div class="callout">
+          <p>
+            A document type provides the
+            <strong>overall process context</strong>; it does not decide every
+            item and schedule behavior by itself. Those decisions are delegated
+            through category determination.
+          </p>
+        </div>
+        <p>
+          In classic on-premise/private-edition configuration,
+          <code>VOV8</code> is the familiar maintenance transaction,
+          <code>TVAK</code> is a configuration landmark, and the selected type
+          appears as <code>VBAK-AUART</code>. In public cloud, use the available
+          configuration activities rather than expecting classic transactions.
+        </p>
+      </section>
+
+      <section>
+        <h2>2. Item category: control one line</h2>
+        <p>
+          The item category lets the same material behave differently in
+          different transactions. It can govern pricing, billing relevance,
+          whether item business data can differ from the header, whether the
+          line is a material or text item, the incompletion procedure, and
+          whether schedule lines are permitted. SAP Learning gives the current
+          overview in
+          <a
+            href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/configuring-an-item-category-1"
+            >Configuring an Item Category</a
+          >.
+        </p>
+        <h3>How SAP proposes it</h3>
+        <pre><code>Sales document type
++ Item category group from the material sales data
++ Item usage
++ Higher-level item category
+──────────────────────────────────────────────────
+= Proposed item category</code></pre>
+        <p>
+          In the simplest stock-material case, usage and higher-level item may
+          be blank. They become important for special lines such as text,
+          free-goods, BOM, or subitems. This is why “the material determines the
+          item category” is incomplete: the document and item context also
+          participate.
+        </p>
+        <p>
+          Classic landmarks are <code>VOV7</code>/<code>TVAP</code> for the
+          category definition and <code>VOV4</code>/<code>T184</code> for the
+          determination assignment. The material's item-category group is
+          commonly inspected in sales-area material data
+          (<code>MVKE-MTPOS</code>), and the determined value is stored on the
+          order item as <code>VBAP-PSTYV</code>.
+        </p>
+      </section>
+
+      <section>
+        <h2>3. Schedule-line category: control fulfillment</h2>
+        <p>
+          First, the item category must allow schedule lines. The selected
+          schedule-line category then controls whether the dated quantity is
+          relevant for delivery, requirements transfer and availability check,
+          which movement type supports later goods movement, and whether a
+          purchase requisition or delivery block is involved. See
+          <a
+            href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/configuring-schedule-line-categories"
+            >Configuring Schedule Line Categories</a
+          >.
+        </p>
+        <h3>How SAP proposes it</h3>
+        <pre><code>1. Try: Item category + material/plant MRP type
+2. Fallback: Item category + blank MRP type
+──────────────────────────────────────────────
+= Proposed schedule-line category</code></pre>
+        <p>
+          The assignment can also define permitted alternatives. SAP documents
+          this exact two-step lookup in
+          <a
+            href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/assigning-schedule-line-categories"
+            >Assigning Schedule Line Categories</a
+          >.
+        </p>
+        <p>
+          Classic landmarks are <code>VOV6</code>/<code>TVEP</code> for the
+          category definition and <code>VOV5</code>/<code>TVEPZ</code> for the
+          assignment. The MRP type is commonly inspected at material/plant level
+          as <code>MARC-DISMM</code>; the result appears as
+          <code>VBEP-ETTYP</code>.
+        </p>
+      </section>
+
+      <section>
+        <h2>One worked trace</h2>
+        <p>
+          A customer orders a stocked material in a standard order. The codes
+          below are illustrative standard examples; always inspect the target
+          system because configuration can differ.
+        </p>
+        <pre><code>Input A: document type OR
+Input B: material item-category group NORM
+Input C: usage blank; higher-level item blank
+          │
+          └─ VOV4 assignment proposes item category TAN
+
+Input D: item category TAN
+Input E: material/plant MRP type PD
+          │
+          └─ VOV5 assignment commonly proposes schedule-line category CP</code></pre>
+        <p>
+          SAP then reads the settings of the selected categories. If the item is
+          unexpectedly not priced, inspect the
+          <em>item-category result and definition</em>. If the quantity is not
+          transferred to requirements or not delivery relevant, inspect the
+          <em>schedule-line result and definition</em>—after confirming that the
+          item allows schedule lines.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Symptom</th>
+              <th>First control level</th>
+              <th>Then verify</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Whole order starts with an unexpected block/default</td>
+              <td>Document type</td>
+              <td>
+                Other block/determination sources and copied reference data
+              </td>
+            </tr>
+            <tr>
+              <td>One line is not priced or billed as expected</td>
+              <td>Item category</td>
+              <td>Pricing/billing configuration beyond the category</td>
+            </tr>
+            <tr>
+              <td>No schedule line exists</td>
+              <td>Item category</td>
+              <td>
+                Whether schedule lines are allowed and determination inputs
+                exist
+              </td>
+            </tr>
+            <tr>
+              <td>Schedule exists but has no ATP/requirements behavior</td>
+              <td>Schedule-line category</td>
+              <td>MRP type, category assignment, and category controls</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Four traps that matter in interviews and incidents</h2>
+        <div class="grid">
+          <article class="card">
+            <h3>Determination ≠ definition</h3>
+            <p>
+              The assignment selects a category. The category definition says
+              what the selected category does.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Movement type ≠ posting</h3>
+            <p>
+              A movement type in schedule-line configuration prepares later
+              goods-movement behavior; saving the order does not itself prove
+              goods issue occurred.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Delivery relevance has levels</h3>
+            <p>
+              For scheduled material items, schedule-line control is central.
+              The item-category delivery-relevance indicator specifically
+              supports items without schedule lines.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Configuration ≠ transaction data</h3>
+            <p>
+              Changing a configuration rule changes processing logic. It is not
+              the same as editing one Sales Order, and its impact must be tested
+              and transported deliberately.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <h2>Technical Consultant diagnostic flow</h2>
+        <ol>
+          <li>
+            <strong>Capture the symptom and grain.</strong> In
+            <code>VA03</code>, record the Sales Order, item, and schedule line
+            plus expected versus actual behavior.
+          </li>
+          <li>
+            <strong>Read the selected results.</strong> Note
+            <code>VBAK-AUART</code>, <code>VBAP-PSTYV</code>, and
+            <code>VBEP-ETTYP</code>.
+          </li>
+          <li>
+            <strong>Reconstruct item-category inputs.</strong> Check document
+            type, <code>MVKE-MTPOS</code> in the correct sales area, item usage,
+            and higher-level item category.
+          </li>
+          <li>
+            <strong>Verify the lookup.</strong> Compare those inputs with the
+            <code>VOV4</code> assignment, then inspect the selected category in
+            <code>VOV7</code>.
+          </li>
+          <li>
+            <strong>Reconstruct schedule-line inputs.</strong> Check item
+            category and <code>MARC-DISMM</code> for the correct material and
+            plant.
+          </li>
+          <li>
+            <strong>Verify exact and fallback lookups.</strong> Inspect
+            <code>VOV5</code>, then the selected schedule-line control in
+            <code>VOV6</code>.
+          </li>
+          <li>
+            <strong>Widen only after standard inputs are explained.</strong>
+            Then inspect copy control, master-data gaps, other configuration, or
+            enhancements.
+          </li>
+        </ol>
+        <div class="callout">
+          <p>
+            Never repair the symptom by directly editing configuration or
+            transaction tables. Use authorized configuration activities,
+            document the rationale, test dependent flows, and transport through
+            the landscape. For clean-core extensions, prefer released APIs and
+            CDS contracts over direct table dependencies.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Do not confuse SD determination with RAP determination</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Term</th>
+              <th>Meaning</th>
+              <th>Typical implementation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SD category determination</td>
+              <td>Select a configured category from several business inputs</td>
+              <td>
+                Customizing lookup such as item- or schedule-line-category
+                assignment
+              </td>
+            </tr>
+            <tr>
+              <td>RAP determination</td>
+              <td>
+                Automatically derive or update BO data after declared triggers
+              </td>
+              <td>Behavior definition plus behavior-pool implementation</td>
+            </tr>
+            <tr>
+              <td>RAP validation</td>
+              <td>Reject inconsistent BO state with messages</td>
+              <td>On-save or other supported validation trigger</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          In your portfolio, a simplified <code>RequestType</code>,
+          <code>ItemProcessingType</code>, and <code>FulfillmentPolicy</code>
+          could express the three scopes. Do not claim they reproduce standard
+          SD configuration. If you integrate with standard Sales, keep SAP's
+          control model behind a released integration boundary instead of
+          duplicating its rules in custom RAP code.
+        </p>
+      </section>
+
+      <section>
+        <h2>Your 35-minute trace exercise</h2>
+        <p>
+          Scenario: one normal stock item receives the expected item category,
+          but no requirement is transferred and no quantity is confirmed.
+        </p>
+        <ol>
+          <li>
+            Draw the three control levels and write the stored result field for
+            each.
+          </li>
+          <li>List all four item-category determination inputs.</li>
+          <li>
+            List both schedule-line lookup attempts in their correct order.
+          </li>
+          <li>
+            Separate evidence that the wrong category was selected from evidence
+            that the correct category has unsuitable settings.
+          </li>
+          <li>
+            Explain why checking only the Material and Sales Order type is
+            insufficient.
+          </li>
+          <li>
+            Explain why finding movement type <code>601</code> in configuration
+            is not evidence that PGI occurred.
+          </li>
+          <li>
+            Translate the control scopes—not SAP's exact logic—into your RAP
+            portfolio vocabulary.
+          </li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Retrieval questions — answer one at a time</h2>
+        <ol>
+          <li>
+            What business question is answered by the sales document type, item
+            category, and schedule-line category?
+          </li>
+          <li>
+            Why can the same material be processed differently in an inquiry and
+            a standard order?
+          </li>
+          <li>Which four inputs participate in item-category determination?</li>
+          <li>
+            What important business behavior can an item category control?
+          </li>
+          <li>
+            Why is the material's item-category group alone insufficient to
+            determine the item category?
+          </li>
+          <li>
+            Which inputs determine the schedule-line category, and what fallback
+            does SAP try?
+          </li>
+          <li>
+            What important fulfillment behavior can a schedule-line category
+            control?
+          </li>
+          <li>
+            Why does a configured movement type not mean inventory changes when
+            the Sales Order is saved?
+          </li>
+          <li>
+            Which level controls delivery relevance, and what nuance applies to
+            items without schedule lines?
+          </li>
+          <li>
+            How is SD category determination different from a RAP determination?
+          </li>
+        </ol>
+        <div class="interview-target">
+          <span class="interview-id">SD document control</span>
+          <p>
+            Use this answer frame:
+            <strong
+              >business level → determination inputs → selected category →
+              control settings → downstream consequence</strong
+            >.
+          </p>
+        </div>
+        <h3>Technical-consultant checkpoint</h3>
+        <ol>
+          <li>
+            Where do you inspect the classic sales document type definition, its
+            configuration landmark, and the selected transaction field?
+          </li>
+          <li>
+            How do <code>VOV7</code>/<code>TVAP</code> differ from
+            <code>VOV4</code>/<code>T184</code>?
+          </li>
+          <li>
+            How do <code>VOV6</code>/<code>TVEP</code> differ from
+            <code>VOV5</code>/<code>TVEPZ</code>?
+          </li>
+          <li>
+            An item received the wrong category. Which transaction and
+            master-data inputs do you trace before looking for custom code?
+          </li>
+          <li>
+            A schedule line exists but does not transfer requirements. Describe
+            your trace from stored result back to control definition.
+          </li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Reading route</h2>
+        <p>
+          <strong>Primary reading:</strong>
+          <a
+            href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/configuring-an-item-category-1"
+            >SAP Learning — Configuring an Item Category</a
+          >.
+        </p>
+        <p>
+          Then read
+          <a
+            href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/configuring-a-sales-document-type"
+            >Configuring a Sales Document Type</a
+          >,
+          <a
+            href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/configuring-schedule-line-categories"
+            >Configuring Schedule Line Categories</a
+          >, and
+          <a
+            href="https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/assigning-schedule-line-categories"
+            >Assigning Schedule Line Categories</a
+          >. Use the
+          <a href="../reference/sap-sd-source-map.html">SAP SD source map</a>
+          only for secondary breadth and terminology support.
+        </p>
+      </section>
+
+      <section>
+        <h2>Completion gate</h2>
+        <ul class="checklist">
+          <li>
+            I can distinguish all three control levels without listing
+            transactions first.
+          </li>
+          <li>
+            I can reconstruct item-category determination from all four inputs.
+          </li>
+          <li>
+            I can reconstruct exact and fallback schedule-line determination.
+          </li>
+          <li>
+            I can separate assignment errors from category-definition errors.
+          </li>
+          <li>I can explain the delivery-relevance and movement-type traps.</li>
+          <li>
+            I can trace the classic transactions, tables, master fields, and
+            stored results.
+          </li>
+          <li>I can explain the public-cloud and clean-core boundary.</li>
+          <li>
+            I can distinguish SD configuration determination from RAP behavior
+            determination.
+          </li>
+          <li>
+            I completed the trace exercise without changing tables directly.
+          </li>
+          <li>I answered all questions from memory, one at a time.</li>
+        </ul>
+      </section>
+
+      <footer>
+        Previous:
+        <a href="./0014-place-sales-order-data-at-the-correct-level.html"
+          >Lesson 14 — Place Sales Order Data at the Correct Level</a
+        >. Ask your teacher to review the retrieval questions one at a time.
+        Next: trace pricing through the condition technique.
+      </footer>
+    </main>
+  </body>
+</html>

@@ -60,6 +60,18 @@
   Defines a schedule line as an item subdivision by quantity and date and lists requested, confirmed, delivered, and open fields. Use for: schedule-line semantics and API-oriented field inspection.
 - [SAP Learning: Running an Available-to-Promise Check](https://learning.sap.com/courses/performing-the-availability-check/running-an-available-to-promise-atp-check-in-sap-s-4hana-sales_a2b4c5e3-1618-418d-a4f6-efe5ff43f7f1)
   Explains how availability-check results become confirmed or unconfirmed schedule-line quantities and dates. Use for: connecting ATP outcomes to fulfillment commitments.
+- [SAP Help: How Sales Documents Are Controlled](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/c264b65334e6b54ce10000000a174cb4.html)
+  First-party overview of header-, item-, and schedule-line-level controls. Use for: the three-level Sales document control model.
+- [SAP Learning: Configuring a Sales Document Type](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/configuring-a-sales-document-type)
+  Explains document categories, defaults, checks, blocks, subsequent-document proposals, and safe copying of a similar standard type. Use for: header-level process control.
+- [SAP Learning: Configuring an Item Category](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/configuring-an-item-category-1)
+  Explains item-level controls for pricing, billing, business data, text/material lines, incompletion, and schedule-line participation. Use for: item behavior and delivery-relevance nuance.
+- [SAP Help: Determining Sales Document Item Categories](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/dc89c95360267214e10000000a174cb4.html)
+  Documents the item-category determination inputs. Use for: reconstructing the lookup before investigating custom code.
+- [SAP Learning: Configuring Schedule Line Categories](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/configuring-schedule-line-categories)
+  Explains delivery relevance, movement type, requirements transfer, availability check, procurement, and blocks. Use for: fulfillment-level control.
+- [SAP Learning: Assigning Schedule Line Categories](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/assigning-schedule-line-categories)
+  Documents exact item-category/MRP-type determination and the blank-MRP fallback. Use for: diagnosing schedule-line category selection.
 - [SAP Learning: Applying the Partner Function Concept](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/applying-the-partner-function-concept)
   Distinguishes partner types and transaction-specific partner functions and shows how master relationships are proposed into documents. Use for: Sold-to, Ship-to, Bill-to, Payer, and partner determination.
 - [SAP Learning Journey: Implementing Sales in SAP S/4HANA Cloud Public Edition](https://learning.sap.com/learning-journeys/implementing-sap-s4hana-cloud-public-edition-sales)

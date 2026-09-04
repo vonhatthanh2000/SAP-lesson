@@ -9,7 +9,9 @@
   <body>
     <main>
       <header>
-        <div class="eyebrow">Lesson 14 · 75–90 minutes · SAP SD document structure</div>
+        <div class="eyebrow">
+          Lesson 14 · 75–90 minutes · SAP SD document structure
+        </div>
         <h1>Place Sales Order data at the correct level</h1>
         <p class="lede">
           Learn to decide whether a business fact belongs to the Sales Order
@@ -23,15 +25,20 @@
         <p>
           Begin after you can distinguish reusable master data from the
           transaction-specific values copied into a Sales Order. Review the
-          <a href="../lesson-notes/0013-sd-sales-order-master-data-recap.md">Lesson 13 recap</a>
+          <a href="../lesson-notes/0013-sd-sales-order-master-data-recap.md"
+            >Lesson 13 recap</a
+          >
           if you cannot yet trace payment terms or partner data back to their
           sources.
         </p>
         <div class="callout success">
           <p>
             <strong>Tangible win:</strong> inspect any Sales Order field and
-            defend its level using this question: <strong>what is the smallest
-            business scope for which this value remains true?</strong>
+            defend its level using this question:
+            <strong
+              >what is the smallest business scope for which this value remains
+              true?</strong
+            >
           </p>
         </div>
       </section>
@@ -47,12 +54,18 @@
         <p>
           SAP describes sales documents as a header with multiple items. Each
           item can contain one or more schedule lines. Header data is relevant
-          to the whole document, item data is specific to one product or
-          service line, and schedule-line data divides an item's requirement
-          by quantity and date. See SAP Learning's
-          <a href="https://learning.sap.com/courses/executing-basic-erp-processes-with-sap-s-4hana/executing-sales-order-management">Executing Sales Order Management</a>
+          to the whole document, item data is specific to one product or service
+          line, and schedule-line data divides an item's requirement by quantity
+          and date. See SAP Learning's
+          <a
+            href="https://learning.sap.com/courses/executing-basic-erp-processes-with-sap-s-4hana/executing-sales-order-management"
+            >Executing Sales Order Management</a
+          >
           and SAP Help's
-          <a href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/37df44581efca007e10000000a441470.html">Item Schedule Line</a>.
+          <a
+            href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/37df44581efca007e10000000a441470.html"
+            >Item Schedule Line</a
+          >.
         </p>
         <div class="callout">
           <p>
@@ -68,18 +81,41 @@
         <h2>Level 1: header — true for the order as a whole</h2>
         <p>
           Header data establishes the common commercial context. Put a fact at
-          header level when it is intended to apply to the complete Sales
-          Order rather than one particular product or delivery commitment.
+          header level when it is intended to apply to the complete Sales Order
+          rather than one particular product or delivery commitment.
         </p>
         <table>
-          <thead><tr><th>Typical header fact</th><th>Why it belongs here</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Typical header fact</th>
+              <th>Why it belongs here</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr><td>Sales Order number and type</td><td>Identify and control the complete document.</td></tr>
-            <tr><td>Sales Area</td><td>Provides the commercial context for the order.</td></tr>
-            <tr><td>Sold-to Party</td><td>Owns the overall commercial relationship.</td></tr>
-            <tr><td>Customer purchase-order reference</td><td>Usually identifies the customer's order as a whole.</td></tr>
-            <tr><td>Document currency</td><td>Provides the common currency context for document values.</td></tr>
-            <tr><td>Overall blocks and status</td><td>Summarize or control the entire document.</td></tr>
+            <tr>
+              <td>Sales Order number and type</td>
+              <td>Identify and control the complete document.</td>
+            </tr>
+            <tr>
+              <td>Sales Area</td>
+              <td>Provides the commercial context for the order.</td>
+            </tr>
+            <tr>
+              <td>Sold-to Party</td>
+              <td>Owns the overall commercial relationship.</td>
+            </tr>
+            <tr>
+              <td>Customer purchase-order reference</td>
+              <td>Usually identifies the customer's order as a whole.</td>
+            </tr>
+            <tr>
+              <td>Document currency</td>
+              <td>Provides the common currency context for document values.</td>
+            </tr>
+            <tr>
+              <td>Overall blocks and status</td>
+              <td>Summarize or control the entire document.</td>
+            </tr>
           </tbody>
         </table>
         <p>
@@ -93,19 +129,44 @@
       <section>
         <h2>Level 2: item — true for one product or service line</h2>
         <p>
-          An item answers what is being sold and how that line is processed.
-          Two items in the same order may use different Materials, Plants,
+          An item answers what is being sold and how that line is processed. Two
+          items in the same order may use different Materials, Plants,
           quantities, pricing, delivery rules, or rejection reasons.
         </p>
         <table>
-          <thead><tr><th>Typical item fact</th><th>Why it belongs here</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Typical item fact</th>
+              <th>Why it belongs here</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr><td>Material or service</td><td>Identifies the subject of this line.</td></tr>
-            <tr><td>Ordered quantity and sales unit</td><td>Describe how much of this line was requested.</td></tr>
-            <tr><td>Delivering Plant</td><td>A different source location may fulfill each line.</td></tr>
-            <tr><td>Item net value</td><td>Represents the commercial result for this line.</td></tr>
-            <tr><td>Item category</td><td>Controls how this particular line participates in the process.</td></tr>
-            <tr><td>Item rejection reason</td><td>One line may be rejected while others continue.</td></tr>
+            <tr>
+              <td>Material or service</td>
+              <td>Identifies the subject of this line.</td>
+            </tr>
+            <tr>
+              <td>Ordered quantity and sales unit</td>
+              <td>Describe how much of this line was requested.</td>
+            </tr>
+            <tr>
+              <td>Delivering Plant</td>
+              <td>A different source location may fulfill each line.</td>
+            </tr>
+            <tr>
+              <td>Item net value</td>
+              <td>Represents the commercial result for this line.</td>
+            </tr>
+            <tr>
+              <td>Item category</td>
+              <td>
+                Controls how this particular line participates in the process.
+              </td>
+            </tr>
+            <tr>
+              <td>Item rejection reason</td>
+              <td>One line may be rejected while others continue.</td>
+            </tr>
           </tbody>
         </table>
         <p>
@@ -124,17 +185,43 @@
           delivered and open quantities, and delivery-relevant controls. SAP
           defines this node as the division of an item by date and quantity in
           the
-          <a href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/37df44581efca007e10000000a441470.html">Sales Order API documentation</a>.
+          <a
+            href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/37df44581efca007e10000000a441470.html"
+            >Sales Order API documentation</a
+          >.
         </p>
         <table>
-          <thead><tr><th>Typical schedule-line fact</th><th>Business meaning</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Typical schedule-line fact</th>
+              <th>Business meaning</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr><td>Requested delivery date</td><td>When the customer wants this quantity.</td></tr>
-            <tr><td>Schedule-line order quantity</td><td>How much demand belongs to this line.</td></tr>
-            <tr><td>Confirmed delivery date</td><td>When SAP currently confirms fulfillment.</td></tr>
-            <tr><td>Confirmed quantity</td><td>How much SAP currently confirms for that date.</td></tr>
-            <tr><td>Delivered/open confirmed quantity</td><td>How much has progressed and how much remains due.</td></tr>
-            <tr><td>Schedule-line delivery block</td><td>Whether this particular commitment may proceed.</td></tr>
+            <tr>
+              <td>Requested delivery date</td>
+              <td>When the customer wants this quantity.</td>
+            </tr>
+            <tr>
+              <td>Schedule-line order quantity</td>
+              <td>How much demand belongs to this line.</td>
+            </tr>
+            <tr>
+              <td>Confirmed delivery date</td>
+              <td>When SAP currently confirms fulfillment.</td>
+            </tr>
+            <tr>
+              <td>Confirmed quantity</td>
+              <td>How much SAP currently confirms for that date.</td>
+            </tr>
+            <tr>
+              <td>Delivered/open confirmed quantity</td>
+              <td>How much has progressed and how much remains due.</td>
+            </tr>
+            <tr>
+              <td>Schedule-line delivery block</td>
+              <td>Whether this particular commitment may proceed.</td>
+            </tr>
           </tbody>
         </table>
         <p>
@@ -157,20 +244,45 @@
           September. The business meaning is:
         </p>
         <table>
-          <thead><tr><th>Level</th><th>Quantity</th><th>Date</th><th>Meaning</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Level</th>
+              <th>Quantity</th>
+              <th>Date</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr><td>Item</td><td>10</td><td>—</td><td>Total ordered quantity for the bicycle line.</td></tr>
-            <tr><td>Schedule line A</td><td>6 confirmed</td><td>10 Sep</td><td>First fulfillment commitment.</td></tr>
-            <tr><td>Schedule line B</td><td>4 confirmed</td><td>17 Sep</td><td>Remaining fulfillment commitment.</td></tr>
+            <tr>
+              <td>Item</td>
+              <td>10</td>
+              <td>—</td>
+              <td>Total ordered quantity for the bicycle line.</td>
+            </tr>
+            <tr>
+              <td>Schedule line A</td>
+              <td>6 confirmed</td>
+              <td>10 Sep</td>
+              <td>First fulfillment commitment.</td>
+            </tr>
+            <tr>
+              <td>Schedule line B</td>
+              <td>4 confirmed</td>
+              <td>17 Sep</td>
+              <td>Remaining fulfillment commitment.</td>
+            </tr>
           </tbody>
         </table>
         <p>
           The exact schedule-line representation depends on the availability
-          result and configuration, but the invariant is the important part:
-          the item expresses overall demand; schedule lines express dated
-          fulfillment commitments. SAP explains that ATP results are recorded
-          in schedule lines and can allow partial deliveries in
-          <a href="https://learning.sap.com/courses/performing-the-availability-check/running-an-available-to-promise-atp-check-in-sap-s-4hana-sales_a2b4c5e3-1618-418d-a4f6-efe5ff43f7f1">Running an ATP Check</a>.
+          result and configuration, but the invariant is the important part: the
+          item expresses overall demand; schedule lines express dated
+          fulfillment commitments. SAP explains that ATP results are recorded in
+          schedule lines and can allow partial deliveries in
+          <a
+            href="https://learning.sap.com/courses/performing-the-availability-check/running-an-available-to-promise-atp-check-in-sap-s-4hana-sales_a2b4c5e3-1618-418d-a4f6-efe5ff43f7f1"
+            >Running an ATP Check</a
+          >.
         </p>
         <div class="callout success">
           <p>
@@ -198,10 +310,13 @@ Item 10: follows the header change
 Item 20: may retain its different item value</code></pre>
         <p>
           SAP Help explains that when header and item values are identical,
-          later header changes can be copied to those items; an item whose
-          value differs represents an exception. Follow-up processing can add
-          further restrictions. See
-          <a href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/5664b65334e6b54ce10000000a174cb4.html">Relationship Between Header and Items</a>.
+          later header changes can be copied to those items; an item whose value
+          differs represents an exception. Follow-up processing can add further
+          restrictions. See
+          <a
+            href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/5664b65334e6b54ce10000000a174cb4.html"
+            >Relationship Between Header and Items</a
+          >.
         </p>
         <div class="callout">
           <p>
@@ -216,15 +331,15 @@ Item 20: may retain its different item value</code></pre>
       <section>
         <h2>Values also roll upward</h2>
         <p>
-          Information does not travel only downward. Item values and states
-          also contribute to header totals and overall status.
+          Information does not travel only downward. Item values and states also
+          contribute to header totals and overall status.
         </p>
         <pre><code>Schedule-line confirmations → item confirmation/delivery state
 Item values                 → header/document net value
 Item statuses               → overall document status</code></pre>
         <p>
-          An overall status is therefore a summary, not an independent claim.
-          If Item 10 is complete and Item 20 is open, the header may be partly
+          An overall status is therefore a summary, not an independent claim. If
+          Item 10 is complete and Item 20 is open, the header may be partly
           processed. To diagnose the cause, move down the hierarchy instead of
           trusting only the summary.
         </p>
@@ -240,17 +355,35 @@ Item statuses               → overall document status</code></pre>
           business hierarchy remains.
         </p>
         <table>
-          <thead><tr><th>Business level</th><th>Classic key and persistence landmark</th><th>Released/API-style node</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Business level</th>
+              <th>Classic key and persistence landmark</th>
+              <th>Released/API-style node</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr><td>Header</td><td><code>VBAK-VBELN</code></td><td><code>A_SalesOrder</code></td></tr>
-            <tr><td>Item</td><td><code>VBAP-VBELN + POSNR</code></td><td><code>A_SalesOrderItem</code></td></tr>
-            <tr><td>Schedule line</td><td><code>VBEP-VBELN + POSNR + ETENR</code></td><td><code>A_SalesOrderScheduleLine</code></td></tr>
+            <tr>
+              <td>Header</td>
+              <td><code>VBAK-VBELN</code></td>
+              <td><code>A_SalesOrder</code></td>
+            </tr>
+            <tr>
+              <td>Item</td>
+              <td><code>VBAP-VBELN + POSNR</code></td>
+              <td><code>A_SalesOrderItem</code></td>
+            </tr>
+            <tr>
+              <td>Schedule line</td>
+              <td><code>VBEP-VBELN + POSNR + ETENR</code></td>
+              <td><code>A_SalesOrderScheduleLine</code></td>
+            </tr>
           </tbody>
         </table>
         <p>
           These table names are useful landmarks for classic-system debugging,
-          but they do not define the business semantics by themselves. In
-          ABAP Cloud or clean-core extensions, use released CDS views, business
+          but they do not define the business semantics by themselves. In ABAP
+          Cloud or clean-core extensions, use released CDS views, business
           objects, and APIs available in the target system rather than assuming
           direct table access is an appropriate integration contract.
         </p>
@@ -266,18 +399,33 @@ VBELN + POSNR + ETENR identifies one dated quantity line inside that item</code>
         </p>
         <h3>Debug at the correct grain</h3>
         <ol>
-          <li>Reproduce the issue in display mode and note order, item, and schedule-line identifiers.</li>
-          <li>Use F1 technical information when available to identify the field and data element.</li>
-          <li>Determine whether the value is stored, copied, derived, or aggregated before choosing a table or API node.</li>
-          <li>Read header, item, and schedule data using their full keys; compare requested, confirmed, delivered, and open quantities.</li>
-          <li>Check follow-up documents before treating a value as freely changeable.</li>
+          <li>
+            Reproduce the issue in display mode and note order, item, and
+            schedule-line identifiers.
+          </li>
+          <li>
+            Use F1 technical information when available to identify the field
+            and data element.
+          </li>
+          <li>
+            Determine whether the value is stored, copied, derived, or
+            aggregated before choosing a table or API node.
+          </li>
+          <li>
+            Read header, item, and schedule data using their full keys; compare
+            requested, confirmed, delivered, and open quantities.
+          </li>
+          <li>
+            Check follow-up documents before treating a value as freely
+            changeable.
+          </li>
         </ol>
         <div class="callout">
           <p>
             Do not use <code>SE16N</code>/<code>SE16H</code> as your first model
-            of the business object. They can help authorized consultants
-            inspect persistence in applicable systems, but released APIs/CDS
-            carry semantic and lifecycle contracts that raw tables do not.
+            of the business object. They can help authorized consultants inspect
+            persistence in applicable systems, but released APIs/CDS carry
+            semantic and lifecycle contracts that raw tables do not.
           </p>
         </div>
       </section>
@@ -300,54 +448,120 @@ Possible ownership
           remain independent associations.
         </p>
         <p>
-          Keep the portfolio honest: your custom `Schedules` entity can model
-          a simplified promise plan, but do not claim that it reproduces
-          standard SAP ATP, scheduling, requirements transfer, or delivery
-          processing. Those are integration boundaries for later work.
+          Keep the portfolio honest: your custom `Schedules` entity can model a
+          simplified promise plan, but do not claim that it reproduces standard
+          SAP ATP, scheduling, requirements transfer, or delivery processing.
+          Those are integration boundaries for later work.
         </p>
       </section>
 
       <section>
         <h2>Your 30-minute structure exercise</h2>
         <ol>
-          <li>Draw one order containing two items; give Item 10 two schedule lines and Item 20 one.</li>
-          <li>Place these fields: Sold-to, Material, Sales Area, Plant, Document Currency, Ordered Quantity, Confirmed Quantity, Requested Date, Confirmed Date, Item Net Amount, Total Amount, and Rejection Reason.</li>
-          <li>For every field, say why moving it one level upward would lose meaning or moving it downward would duplicate a common fact.</li>
-          <li>Model an order for 10 units with six confirmed on the requested date and four confirmed later.</li>
-          <li>Change a header default after Item 20 has a deliberate exception. Predict which item follows the header and defend why.</li>
-          <li>Draw the equivalent RAP composition tree and mark every independent master object as an association.</li>
+          <li>
+            Draw one order containing two items; give Item 10 two schedule lines
+            and Item 20 one.
+          </li>
+          <li>
+            Place these fields: Sold-to, Material, Sales Area, Plant, Document
+            Currency, Ordered Quantity, Confirmed Quantity, Requested Date,
+            Confirmed Date, Item Net Amount, Total Amount, and Rejection Reason.
+          </li>
+          <li>
+            For every field, say why moving it one level upward would lose
+            meaning or moving it downward would duplicate a common fact.
+          </li>
+          <li>
+            Model an order for 10 units with six confirmed on the requested date
+            and four confirmed later.
+          </li>
+          <li>
+            Change a header default after Item 20 has a deliberate exception.
+            Predict which item follows the header and defend why.
+          </li>
+          <li>
+            Draw the equivalent RAP composition tree and mark every independent
+            master object as an association.
+          </li>
         </ol>
       </section>
 
       <section>
         <h2>Retrieval questions — answer one at a time</h2>
         <ol>
-          <li>What business question does each of the header, item, and schedule-line levels answer?</li>
-          <li>Why is the Material normally an item-level value rather than a header-level value?</li>
-          <li>Why are confirmed quantity and confirmed delivery date schedule-line data rather than only item data?</li>
-          <li>Can one item have multiple schedule lines, and what business event creates that need?</li>
-          <li>How do ordered, requested, confirmed, delivered, and open quantities differ?</li>
-          <li>If a header value was copied to every item, does that mean the items dynamically reference one header field?</li>
-          <li>What can happen when a header value changes after one item has an explicit different value?</li>
-          <li>How can item and schedule-line states influence an overall header status?</li>
-          <li>For an order of 10 units with six confirmed now and four later, describe the item and schedule-line state.</li>
-          <li>How would you model header, item, and schedule lines in RAP, and which related objects remain associations?</li>
+          <li>
+            What business question does each of the header, item, and
+            schedule-line levels answer?
+          </li>
+          <li>
+            Why is the Material normally an item-level value rather than a
+            header-level value?
+          </li>
+          <li>
+            Why are confirmed quantity and confirmed delivery date schedule-line
+            data rather than only item data?
+          </li>
+          <li>
+            Can one item have multiple schedule lines, and what business event
+            creates that need?
+          </li>
+          <li>
+            How do ordered, requested, confirmed, delivered, and open quantities
+            differ?
+          </li>
+          <li>
+            If a header value was copied to every item, does that mean the items
+            dynamically reference one header field?
+          </li>
+          <li>
+            What can happen when a header value changes after one item has an
+            explicit different value?
+          </li>
+          <li>
+            How can item and schedule-line states influence an overall header
+            status?
+          </li>
+          <li>
+            For an order of 10 units with six confirmed now and four later,
+            describe the item and schedule-line state.
+          </li>
+          <li>
+            How would you model header, item, and schedule lines in RAP, and
+            which related objects remain associations?
+          </li>
         </ol>
         <div class="interview-target">
           <span class="interview-id">SD document structure</span>
           <p>
-            Use this answer frame: <strong>level → business scope → example
-            fields → downward propagation → upward aggregation → downstream
-            consequence</strong>.
+            Use this answer frame:
+            <strong
+              >level → business scope → example fields → downward propagation →
+              upward aggregation → downstream consequence</strong
+            >.
           </p>
         </div>
         <h3>Technical-consultant checkpoint</h3>
         <ol>
-          <li>What do <code>VBELN</code>, <code>POSNR</code>, and <code>ETENR</code> identify?</li>
-          <li>Which classic tables correspond to header, item, and schedule-line grain?</li>
-          <li>Why can joining <code>VBAK</code>, <code>VBAP</code>, and <code>VBEP</code> inflate a header total?</li>
-          <li>Which API nodes represent the same hierarchy without exposing raw persistence as the contract?</li>
-          <li>When a confirmed quantity looks wrong, which values and document levels should you compare first?</li>
+          <li>
+            What do <code>VBELN</code>, <code>POSNR</code>, and
+            <code>ETENR</code> identify?
+          </li>
+          <li>
+            Which classic tables correspond to header, item, and schedule-line
+            grain?
+          </li>
+          <li>
+            Why can joining <code>VBAK</code>, <code>VBAP</code>, and
+            <code>VBEP</code> inflate a header total?
+          </li>
+          <li>
+            Which API nodes represent the same hierarchy without exposing raw
+            persistence as the contract?
+          </li>
+          <li>
+            When a confirmed quantity looks wrong, which values and document
+            levels should you compare first?
+          </li>
         </ol>
       </section>
 
@@ -355,44 +569,84 @@ Possible ownership
         <h2>Reading route</h2>
         <p>
           <strong>Primary reading:</strong>
-          <a href="https://learning.sap.com/courses/executing-basic-erp-processes-with-sap-s-4hana/executing-sales-order-management">SAP Learning — Executing Sales Order Management</a>.
+          <a
+            href="https://learning.sap.com/courses/executing-basic-erp-processes-with-sap-s-4hana/executing-sales-order-management"
+            >SAP Learning — Executing Sales Order Management</a
+          >.
         </p>
         <p>
           Continue with SAP Help's
-          <a href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/5664b65334e6b54ce10000000a174cb4.html">Relationship Between Header and Items</a>,
-          SAP Help's
-          <a href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/37df44581efca007e10000000a441470.html">Item Schedule Line</a>, and SAP Learning's
-          <a href="https://learning.sap.com/courses/performing-the-availability-check/running-an-available-to-promise-atp-check-in-sap-s-4hana-sales_a2b4c5e3-1618-418d-a4f6-efe5ff43f7f1">Running an ATP Check</a>.
+          <a
+            href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/a376cd9ea00d476b96f18dea1247e6a5/5664b65334e6b54ce10000000a174cb4.html"
+            >Relationship Between Header and Items</a
+          >, SAP Help's
+          <a
+            href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/37df44581efca007e10000000a441470.html"
+            >Item Schedule Line</a
+          >, and SAP Learning's
+          <a
+            href="https://learning.sap.com/courses/performing-the-availability-check/running-an-available-to-promise-atp-check-in-sap-s-4hana-sales_a2b4c5e3-1618-418d-a4f6-efe5ff43f7f1"
+            >Running an ATP Check</a
+          >.
         </p>
         <p>
           Use the
           <a href="../reference/sap-sd-source-map.html">SAP SD source map</a>
           for the secondary Tutorial Campus pages. The next lesson will explain
-          the controls behind the hierarchy: sales document type, item
-          category, and schedule-line category.
+          the controls behind the hierarchy: sales document type, item category,
+          and schedule-line category.
         </p>
       </section>
 
       <section>
         <h2>Completion gate</h2>
         <ul class="checklist">
-          <li>I can classify a field by business scope instead of screen position.</li>
-          <li>I can distinguish an item's total demand from dated schedule-line commitments.</li>
+          <li>
+            I can classify a field by business scope instead of screen position.
+          </li>
+          <li>
+            I can distinguish an item's total demand from dated schedule-line
+            commitments.
+          </li>
           <li>I can explain requested versus confirmed quantity and date.</li>
-          <li>I can explain header-to-item propagation without calling it a live inheritance reference.</li>
-          <li>I can trace an overall status down to item and schedule-line states.</li>
+          <li>
+            I can explain header-to-item propagation without calling it a live
+            inheritance reference.
+          </li>
+          <li>
+            I can trace an overall status down to item and schedule-line states.
+          </li>
           <li>I can model the three levels as a RAP composition hierarchy.</li>
-          <li>I can state why classic table names are landmarks rather than clean-core contracts.</li>
-          <li>I can use the full header/item/schedule-line key and avoid wrong-grain joins.</li>
-          <li>I can connect classic transactions and tables to released API nodes without confusing them.</li>
-          <li>I answered all ten retrieval questions without reading the lesson definitions.</li>
+          <li>
+            I can state why classic table names are landmarks rather than
+            clean-core contracts.
+          </li>
+          <li>
+            I can use the full header/item/schedule-line key and avoid
+            wrong-grain joins.
+          </li>
+          <li>
+            I can connect classic transactions and tables to released API nodes
+            without confusing them.
+          </li>
+          <li>
+            I answered all ten retrieval questions without reading the lesson
+            definitions.
+          </li>
         </ul>
       </section>
 
       <footer>
-        Previous: <a href="./0013-trace-sales-order-master-data.html">Lesson 13 — Trace Sales Order Data to Its Source</a>.
-        Ask your teacher to review the ten retrieval questions one at a time.
-        Next: document type, item category, and schedule-line category control.
+        Previous:
+        <a href="./0013-trace-sales-order-master-data.html"
+          >Lesson 13 — Trace Sales Order Data to Its Source</a
+        >. Review the completed retrieval set in the
+        <a href="../lesson-notes/0014-sd-sales-document-levels-recap.md"
+          >Lesson 14 recap and active-recall notes</a
+        >. Ask your teacher to review the questions one at a time. Next:
+        <a href="./0015-control-sales-document-processing.html"
+          >Lesson 15 — Control Sales Document Processing</a
+        >.
       </footer>
     </main>
   </body>
