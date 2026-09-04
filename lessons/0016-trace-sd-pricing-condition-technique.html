@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lesson 16 — Trace SD Pricing Through the Condition Technique</title>
+    <link rel="stylesheet" href="../assets/course.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">Lesson 16 · 120–150 minutes · SAP SD pricing internals</div>
+        <h1>Trace a price from business context to calculated result</h1>
+        <p class="lede">
+          Learn the condition technique as two technical pipelines: first SAP
+          selects a pricing procedure; then each procedure step searches for,
+          calculates, and stores a pricing element.
+        </p>
+      </header>
+
+      <section>
+        <h2>Prerequisite and tangible win</h2>
+        <p>
+          Begin after you can separate category determination from category
+          definition. Review the
+          <a href="../lesson-notes/0015-sd-document-control-recap.md">Lesson 15 recap</a>
+          if you cannot yet diagnose from stored result back to configuration.
+        </p>
+        <div class="callout success">
+          <p>
+            <strong>By the end:</strong> when a Sales Order price or discount is
+            missing or wrong, you can identify the selected pricing procedure,
+            trace one condition type through every attempted access, inspect
+            the calculation result, and classify the failure without guessing.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The business problem</h2>
+        <p>
+          A final item value can contain a base price, discounts, surcharges,
+          freight, taxes, and statistical values. The condition technique lets
+          SAP select these price elements from reusable condition records and
+          combine them in a controlled calculation sequence. SAP's current
+          overview is
+          <a href="https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/d69fbe532789b44ce10000000a174cb4.html">Condition Technique and Pricing</a>.
+        </p>
+        <div class="callout">
+          <p>
+            Pricing has two different questions: <strong>where did the rate
+            come from?</strong> and <strong>how did that rate contribute to the
+            result?</strong> The access sequence answers the first; the pricing
+            procedure and condition controls answer the second.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>The complete runtime in two pipelines</h2>
+        <h3>Pipeline A — select the pricing procedure</h3>
+        <pre><code>Sales Organization
++ Distribution Channel
++ Division
++ Document Pricing Procedure  ← from sales document type
++ Customer Pricing Procedure  ← from sold-to sales-area data
+─────────────────────────────────────────────────────────
+= Pricing Procedure</code></pre>
+        <p>
+          SAP describes these inputs as Sales Area, document pricing procedure,
+          and customer pricing procedure in
+          <a href="https://learning.sap.com/courses/configuring-pricing-in-sap-s-4hana-sales/introducing-the-condition-technique_dce0f313-dee6-470e-8851-3f1773cb5d45">Introducing the Condition Technique</a>.
+        </p>
+        <h3>Pipeline B — execute every procedure step</h3>
+        <pre><code>Pricing procedure
+  └─ step/counter
+      └─ condition type
+          └─ access sequence
+              ├─ access 10 → condition table → valid record?
+              ├─ access 20 → condition table → valid record?
+              └─ access 30 → condition table → valid record?
+                    ↓
+              rate + scale + base + formula
+                    ↓
+              condition value → subtotal → item net value</code></pre>
+        <p>
+          SAP repeats Pipeline B for each condition type in the procedure. An
+          access normally moves from a more specific key to a more general key
+          until a valid record is found or the search ends.
+        </p>
+      </section>
+
+      <section>
+        <h2>Each component has exactly one main job</h2>
+        <table>
+          <thead><tr><th>Component</th><th>Main job</th><th>Do not confuse it with</th></tr></thead>
+          <tbody>
+            <tr><td>Pricing procedure determination</td><td>Select the applicable pricing procedure from commercial context.</td><td>The calculation inside the procedure</td></tr>
+            <tr><td>Pricing procedure</td><td>Sequence condition types and control requirements, bases, formulas, subtotals, statistical handling, and account keys.</td><td>A database record containing a customer's price</td></tr>
+            <tr><td>Condition type</td><td>Represent a kind of price element such as price, discount, surcharge, freight, or tax.</td><td>One particular rate</td></tr>
+            <tr><td>Access sequence</td><td>Define the prioritized search strategy for one automatically determined condition type.</td><td>The calculation order of all condition types</td></tr>
+            <tr><td>Condition table</td><td>Define the key fields used by one access.</td><td>The record containing the rate</td></tr>
+            <tr><td>Condition record</td><td>Store a rate, currency/unit, validity period, and optional scales for a particular key combination.</td><td>The calculated document pricing result</td></tr>
+            <tr><td>Pricing element/result row</td><td>Store how one condition participated in this business document.</td><td>The reusable condition master record</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Pipeline A in technical detail</h2>
+        <p>
+          Consider this illustrative context:
+        </p>
+        <pre><code>Sales Area:                 1000 / 10 / 00
+Document Pricing Procedure: A
+Customer Pricing Procedure: 1
+                             │
+                             └─ OVKK proposes pricing procedure RVAA01</code></pre>
+        <table>
+          <thead><tr><th>Input/result</th><th>Typical source or field</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td>Sales Area</td><td><code>VBAK-VKORG / VTWEG / SPART</code></td><td>Prices and procedures can differ by selling organization, route, and division.</td></tr>
+            <tr><td>Document Pricing Procedure</td><td>Sales document type control; classic landmark <code>TVAK-KALVG</code></td><td>Lets different document types select different pricing logic.</td></tr>
+            <tr><td>Customer Pricing Procedure</td><td>Sold-to sales-area data; classic landmark <code>KNVV-KALKS</code></td><td>Groups customers for pricing-procedure selection.</td></tr>
+            <tr><td>Pricing Procedure</td><td>Determined in <code>OVKK</code>; common result field <code>VBAK-KALSM</code></td><td>Defines which condition types are processed and in what order.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          Classic <code>OVKK</code> and configuration landmark
+          <code>T683V</code> represent procedure determination. The pricing
+          procedure itself is maintained in <code>V/08</code>; procedure steps
+          are commonly traced in <code>T683S</code>.
+        </p>
+        <div class="callout">
+          <p>
+            If the wrong pricing procedure was selected, inspecting a missing
+            <code>PR00</code> condition record may waste time: you may be looking
+            inside the wrong procedure. Always prove Pipeline A first.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Pipeline B, layer 1: pricing procedure</h2>
+        <p>
+          A procedure row is identified by a step and counter. It can contain a
+          condition type and controls such as:
+        </p>
+        <ul>
+          <li><strong>Requirement:</strong> whether the row should be processed.</li>
+          <li><strong>From/to or alternative base:</strong> which prior values form the calculation base.</li>
+          <li><strong>Alternative calculation formula:</strong> how the condition value is calculated.</li>
+          <li><strong>Subtotal:</strong> where an intermediate result is stored for later use.</li>
+          <li><strong>Mandatory:</strong> whether the condition must be present.</li>
+          <li><strong>Manual:</strong> whether automatic access is bypassed and a user must enter it.</li>
+          <li><strong>Statistical:</strong> display or analysis relevance without ordinary contribution to net value.</li>
+          <li><strong>Account/accrual keys:</strong> downstream account-determination meaning where applicable.</li>
+        </ul>
+        <p>
+          The step order is calculation order, not search priority. Search
+          priority belongs inside the access sequence of one condition type.
+        </p>
+      </section>
+
+      <section>
+        <h2>Pipeline B, layer 2: condition type</h2>
+        <p>
+          A condition type represents a pricing concept. Common illustrative
+          standard examples include <code>PR00</code> for a base price,
+          <code>K004</code> for a material discount, <code>K007</code> for a
+          customer discount, <code>KF00</code> for freight, and
+          <code>MWST</code> for output tax. Exact use is configuration-specific.
+        </p>
+        <p>
+          In <code>V/06</code>, controls can include calculation type, plus/minus
+          sign, group-condition behavior, header/item applicability, scales,
+          manual-entry rules, and an assigned access sequence. A common table
+          landmark is <code>T685</code>.
+        </p>
+        <pre><code>Condition type = meaning and calculation behavior
+Condition record = actual rate for a valid business key and period</code></pre>
+      </section>
+
+      <section>
+        <h2>Pipeline B, layer 3: access sequence and condition tables</h2>
+        <p>
+          An access sequence is a prioritized list of accesses. Each access
+          points to a condition table, whose fields form a search key.
+        </p>
+        <pre><code>Illustrative price search
+
+Access 10: Sales Org + Channel + Customer + Material
+           → most specific negotiated price
+
+Access 20: Sales Org + Channel + Price List + Material
+           → segment/list price
+
+Access 30: Sales Org + Channel + Material
+           → general material price</code></pre>
+        <p>
+          <code>V/07</code> maintains access sequences. Common technical
+          landmarks include <code>T682I</code> for accesses and
+          <code>T682Z</code> for access fields. Condition tables can be created,
+          changed, and displayed with classic transactions
+          <code>V/03</code>, <code>V/04</code>, and <code>V/05</code>.
+          Generated application tables commonly use names such as
+          <code>Axxx</code>, where the number and key structure depend on the
+          configured condition table.
+        </p>
+        <div class="callout">
+          <p>
+            “Record not found” does not always mean no record exists. The access
+            may use different key values, the requirement may skip the access,
+            the record may be outside its validity period, or an earlier access
+            may have stopped the search.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Pipeline B, layer 4: condition records</h2>
+        <p>
+          Condition records are pricing master data. In applicable classic
+          systems, use <code>VK11</code>, <code>VK12</code>, and
+          <code>VK13</code> to create, change, and display records. The fields
+          requested by these transactions depend on the condition type's
+          access sequence and condition tables.
+        </p>
+        <table>
+          <thead><tr><th>Record element</th><th>Example</th><th>Failure to check</th></tr></thead>
+          <tbody>
+            <tr><td>Key combination</td><td>Sales Area + Customer + Material</td><td>You inspect a record for a different lookup key.</td></tr>
+            <tr><td>Validity</td><td>1 Jan–31 Dec</td><td>The record exists but is invalid on the document pricing date.</td></tr>
+            <tr><td>Rate</td><td>100 EUR per 1 EA</td><td>You confuse rate with the extended condition value.</td></tr>
+            <tr><td>Pricing unit and UoM</td><td>100 EUR per 10 EA</td><td>You read 100 as the unit price rather than 10 per EA.</td></tr>
+            <tr><td>Scale</td><td>95 EUR from 100 EA</td><td>You ignore the quantity tier selected at runtime.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          In classic persistence, generated <code>Axxx</code> tables connect a
+          business key to a condition-record number; <code>KONH</code> and
+          <code>KONP</code> are familiar condition-record landmarks. Treat this
+          as implementation knowledge, not as authorization to update the
+          tables or expose them as a clean-core contract.
+        </p>
+      </section>
+
+      <section>
+        <h2>Rate, base, and value are different</h2>
+        <pre><code>Condition rate  = maintained amount or percentage
+Condition base  = amount or quantity to which the rate applies
+Condition value = calculated contribution in this document</code></pre>
+        <p>Illustrative calculation for 10 units:</p>
+        <table>
+          <thead><tr><th>Step</th><th>Type</th><th>Rate/base</th><th>Condition value</th><th>Running result</th></tr></thead>
+          <tbody>
+            <tr><td>10</td><td>Base price</td><td>100 EUR × 10 EA</td><td>1,000 EUR</td><td>1,000 EUR</td></tr>
+            <tr><td>20</td><td>Discount</td><td>10% of 1,000</td><td>−100 EUR</td><td>900 EUR</td></tr>
+            <tr><td>30</td><td>Freight</td><td>50 EUR</td><td>+50 EUR</td><td>950 EUR net</td></tr>
+            <tr><td>40</td><td>Tax</td><td>19% of 950</td><td>180.50 EUR</td><td>1,130.50 EUR incl. tax</td></tr>
+          </tbody>
+        </table>
+        <p>
+          The actual tax basis, net-value contribution, rounding, and posting
+          depend on the procedure, condition type, formulas, and localization.
+          This arithmetic illustrates the roles; it is not a universal standard
+          procedure.
+        </p>
+      </section>
+
+      <section>
+        <h2>Runtime persistence in SAP S/4HANA</h2>
+        <p>
+          A Sales Order contains a pricing-document reference commonly exposed
+          as <code>VBAK-KNUMV</code>. In SAP S/4HANA, document pricing-result rows
+          are persisted in <code>PRCD_ELEMENTS</code>. SAP's conversion guidance
+          states that <code>KONV</code> no longer has the old persistence role;
+          do not design new S/4HANA database reads as if it were still the
+          pricing-result table.
+        </p>
+        <pre><code>VBAK-KNUMV
+    =
+PRCD_ELEMENTS-KNUMV
+  ├─ KPOSN  document item
+  ├─ STUNR  pricing procedure step
+  ├─ ZAEHK  counter within the step
+  ├─ KSCHL  condition type
+  ├─ KAWRT  condition base value
+  ├─ KBETR  condition rate
+  ├─ KWERT  calculated condition value
+  ├─ KPEIN  pricing unit
+  ├─ KMEIN  condition unit
+  ├─ KSTAT  statistical indicator
+  ├─ KINAK  inactive indicator/reason context
+  ├─ KNUMH  source condition-record reference where applicable
+  └─ KHERK  condition origin</code></pre>
+        <p>
+          A pricing element is identified at a finer grain than the Sales Order
+          item: pricing document + item + procedure step + counter. Joining only
+          by order or item can multiply rows and inflate totals.
+        </p>
+        <div class="callout">
+          <p>
+            <strong>Master versus result:</strong> condition records are reusable
+            pricing master data; <code>PRCD_ELEMENTS</code> represents the
+            pricing result captured for a particular business document.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Pricing Analysis is your first debugger</h2>
+        <p>
+          In an applicable SAP GUI Sales Order, navigate to the item's
+          Conditions screen and open Pricing Analysis. SAP documents that it
+          exposes four levels: pricing procedure, condition types, accesses,
+          and found condition records. See
+          <a href="https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/4dd8cb7b1c484b4b93af84d00f60fdb8/918dc95360267214e10000000a174cb4.html">Pricing Information and Analysis</a>.
+        </p>
+        <table>
+          <thead><tr><th>Observed analysis result</th><th>Likely meaning</th><th>Next check</th></tr></thead>
+          <tbody>
+            <tr><td>Condition type absent from procedure</td><td>Wrong procedure or missing procedure row</td><td>Pipeline A and <code>V/08</code></td></tr>
+            <tr><td>Condition type skipped</td><td>Requirement or manual-only control prevented automatic processing</td><td>Procedure row and routine</td></tr>
+            <tr><td>Access not executed</td><td>Access requirement or missing input prevented the lookup</td><td>Access fields and requirement</td></tr>
+            <tr><td>Access executed, no record found</td><td>No valid record for the exact runtime key/date</td><td>Technical view, key values, <code>VK13</code>, validity</td></tr>
+            <tr><td>Record found, condition inactive</td><td>Exclusion, duplicate/better condition, limit, or other pricing control</td><td>Inactive reason and surrounding conditions</td></tr>
+            <tr><td>Rate correct, value wrong</td><td>Base, pricing unit, scale, formula, sign, conversion, or rounding issue</td><td><code>KAWRT</code>, <code>KBETR</code>, <code>KPEIN</code>, <code>KMEIN</code>, procedure controls</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>End-to-end missing-price diagnostic</h2>
+        <ol>
+          <li><strong>Capture the grain.</strong> Record Sales Order and item plus expected condition type, rate, and value.</li>
+          <li><strong>Check item eligibility.</strong> Confirm the item category allows pricing and the item is not rejected or otherwise excluded.</li>
+          <li><strong>Prove procedure selection.</strong> Record Sales Area, document pricing procedure, customer pricing procedure, and resulting pricing procedure.</li>
+          <li><strong>Open Pricing Analysis.</strong> Find the condition type and distinguish absent, skipped, not found, inactive, and calculated states.</li>
+          <li><strong>Trace the access.</strong> Use Technical View to record the actual access fields and values—not the values you expected.</li>
+          <li><strong>Inspect the record.</strong> Verify key, validity/pricing date, rate, currency, pricing unit, unit of measure, and scales.</li>
+          <li><strong>Validate calculation.</strong> Compare base, rate, formula, sign, conversion, rounding, statistical/inactive status, and resulting value.</li>
+          <li><strong>Inspect persistence only when useful.</strong> Correlate the order pricing-document reference with the correct pricing-result grain.</li>
+          <li><strong>Widen after standard logic.</strong> Then check manual changes, condition exclusion, copy control/repricing, enhancements, external pricing, or integration data.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Pricing can change between order and billing</h2>
+        <p>
+          A billing document may copy pricing or perform some form of repricing,
+          depending on the pricing type configured in copy control and the
+          process. Therefore:
+        </p>
+        <pre><code>Sales Order pricing result ≠ guaranteed Billing pricing result</code></pre>
+        <p>
+          Compare the document flow, pricing dates, source/target pricing
+          elements, and copy-control pricing type before calling a difference a
+          defect. SAP explains this boundary in the “New Pricing and Pricing
+          Types” section of
+          <a href="https://learning.sap.com/courses/configuring-pricing-in-sap-s-4hana-sales/introducing-the-condition-technique_dce0f313-dee6-470e-8851-3f1773cb5d45">Introducing the Condition Technique</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Classic, public-cloud, and clean-core boundaries</h2>
+        <table>
+          <thead><tr><th>Context</th><th>Appropriate technical approach</th></tr></thead>
+          <tbody>
+            <tr><td>On-premise/private edition diagnosis</td><td>Classic transactions and table landmarks may be available, subject to authorization and release.</td></tr>
+            <tr><td>Public cloud configuration</td><td>Use the available configuration activities/SSCUIs and released apps rather than assuming classic transaction access.</td></tr>
+            <tr><td>Clean-core extension or integration</td><td>Use released CDS/API contracts available in the target system; do not make raw pricing tables the integration contract.</td></tr>
+          </tbody>
+        </table>
+        <p>
+          The Sales Order OData V4 API exposes item pricing elements through
+          <code>SalesOrderItemPricingElement</code> and the
+          <code>_ItemPricingElement</code> navigation. SAP documents fields such
+          as condition type, procedure step/counter, rate, currency, and base
+          quantity in
+          <a href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/abf59161a5734e0393d30c5fa2f41053.html">Sales Order Item Pricing Element</a>.
+          Supported operations and fields remain release-specific.
+        </p>
+      </section>
+
+      <section>
+        <h2>Transfer the idea to your RAP portfolio</h2>
+        <p>
+          Your current <code>deriveAmounts</code> determination can calculate a
+          simple quantity × unit-price result. It does not reproduce SD pricing.
+          A transparent portfolio boundary would be:
+        </p>
+        <pre><code>Custom portfolio logic
+  RequestedQuantity × UnitPrice → NetAmount
+  Σ Item.NetAmount              → Request.TotalAmount
+
+Standard SD integration boundary
+  Pricing procedure + conditions + released Sales API
+  → externally determined pricing elements and totals</code></pre>
+        <p>
+          If you later integrate standard Sales pricing, keep the adapter deep:
+          accept a business pricing request, call a released capability, and
+          return normalized pricing elements. Do not duplicate SAP's condition
+          tables and procedure engine inside custom RAP behavior.
+        </p>
+      </section>
+
+      <section>
+        <h2>Your technical trace exercise</h2>
+        <p>
+          Scenario: Item 10 should receive a customer/material price, but SAP
+          uses a more general material price. The displayed rate is also
+          unexpected for 120 EA.
+        </p>
+        <ol>
+          <li>Write every Pipeline A input and the determined procedure.</li>
+          <li>Locate the expected price condition type in the procedure and record its step/counter.</li>
+          <li>Draw three accesses from most specific to most general.</li>
+          <li>List the runtime key values you expect Pricing Analysis to show for access 10.</li>
+          <li>Give three reasons why a customer/material record could exist but not be selected.</li>
+          <li>Explain how the general record could be selected after access 10 fails.</li>
+          <li>Check rate, pricing unit, order quantity, and scale before calculating the condition value.</li>
+          <li>Write the expected <code>PRCD_ELEMENTS</code> grain and the fields that prove the result.</li>
+          <li>Explain which evidence would justify checking enhancement code.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Conceptual retrieval — answer one at a time</h2>
+        <ol>
+          <li>What business problem does the condition technique solve?</li>
+          <li>Which inputs determine the Sales pricing procedure?</li>
+          <li>How does a pricing procedure differ from a condition type?</li>
+          <li>How does an access sequence differ from the pricing-procedure sequence?</li>
+          <li>How does a condition table differ from a condition record?</li>
+          <li>Why does an access sequence normally search from specific to general?</li>
+          <li>How do condition rate, condition base, and condition value differ?</li>
+          <li>What do requirement, manual, mandatory, and statistical controls mean?</li>
+          <li>Why can a valid condition record exist but not be selected?</li>
+          <li>Why can a found condition be inactive?</li>
+          <li>Why might Sales Order pricing differ from billing pricing?</li>
+          <li>Why is your RAP <code>deriveAmounts</code> determination not equivalent to SAP SD pricing?</li>
+        </ol>
+        <div class="interview-target">
+          <span class="interview-id">SD pricing</span>
+          <p>
+            Answer with: <strong>procedure inputs → selected procedure → step
+            and condition type → access keys → record → rate/base/value →
+            persisted result</strong>.
+          </p>
+        </div>
+        <h3>Technical Consultant checkpoint</h3>
+        <ol>
+          <li>Map <code>OVKK</code>, <code>V/08</code>, <code>V/06</code>, <code>V/07</code>, and <code>VK13</code> to their exact responsibilities.</li>
+          <li>Where do document pricing procedure and customer pricing procedure normally originate?</li>
+          <li>How do <code>T683V</code>, <code>T683S</code>, <code>T685</code>, <code>T682I/T682Z</code>, and generated <code>Axxx</code> tables differ?</li>
+          <li>What do <code>VBAK-KNUMV</code>, <code>PRCD_ELEMENTS-KPOSN</code>, <code>STUNR</code>, and <code>ZAEHK</code> identify?</li>
+          <li>How do <code>KBETR</code>, <code>KAWRT</code>, <code>KWERT</code>, <code>KPEIN</code>, and <code>KMEIN</code> help explain a wrong value?</li>
+          <li>What is the S/4HANA persistence difference between <code>KONV</code> and <code>PRCD_ELEMENTS</code>?</li>
+          <li>In Pricing Analysis, how do skipped, not found, inactive, and wrong calculated value lead to different investigations?</li>
+          <li>Describe the full trace when a customer/material price exists but a general material price is selected.</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>Reading route</h2>
+        <p>
+          <strong>Primary reading:</strong>
+          <a href="https://learning.sap.com/courses/configuring-pricing-in-sap-s-4hana-sales/introducing-the-condition-technique_dce0f313-dee6-470e-8851-3f1773cb5d45">SAP Learning — Introducing the Condition Technique</a>.
+        </p>
+        <p>
+          Continue with SAP Help's
+          <a href="https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/d69fbe532789b44ce10000000a174cb4.html">Condition Technique and Pricing</a>,
+          <a href="https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/4dd8cb7b1c484b4b93af84d00f60fdb8/918dc95360267214e10000000a174cb4.html">Pricing Information and Analysis</a>, and
+          <a href="https://help.sap.com/docs/SAP_S4HANA_ONPREMISE/7b24a64d9d0941bda1afa753263d9e39/735946c4cf404059bd7f725850d5f187.html">How to Introduce a New Price Element</a>.
+        </p>
+      </section>
+
+      <section>
+        <h2>Completion gate</h2>
+        <ul class="checklist">
+          <li>I can draw both pricing pipelines from memory.</li>
+          <li>I can name all pricing-procedure determination inputs and sources.</li>
+          <li>I can separate procedure order from access-search order.</li>
+          <li>I can separate condition type, table, record, and document result.</li>
+          <li>I can calculate condition value from rate, base, unit, and scale.</li>
+          <li>I can interpret Pricing Analysis states without guessing.</li>
+          <li>I can navigate the classic pricing transactions by responsibility.</li>
+          <li>I can explain the S/4HANA <code>PRCD_ELEMENTS</code> result grain.</li>
+          <li>I can distinguish condition master data from document pricing results.</li>
+          <li>I can explain repricing between Sales Order and billing.</li>
+          <li>I can state the public-cloud and clean-core technical boundaries.</li>
+          <li>I answered all conceptual and technical questions one at a time.</li>
+        </ul>
+      </section>
+
+      <footer>
+        Previous: <a href="./0015-control-sales-document-processing.html">Lesson 15 — Control Sales Document Processing</a>.
+        Ask your teacher to review the questions one at a time.
+        Next: trace delivery creation, picking, and Post Goods Issue.
+      </footer>
+    </main>
+  </body>
+</html>

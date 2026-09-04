@@ -72,6 +72,16 @@
   Explains delivery relevance, movement type, requirements transfer, availability check, procurement, and blocks. Use for: fulfillment-level control.
 - [SAP Learning: Assigning Schedule Line Categories](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/assigning-schedule-line-categories)
   Documents exact item-category/MRP-type determination and the blank-MRP fallback. Use for: diagnosing schedule-line category selection.
+- [SAP Learning: Introducing the Condition Technique](https://learning.sap.com/courses/configuring-pricing-in-sap-s-4hana-sales/introducing-the-condition-technique_dce0f313-dee6-470e-8851-3f1773cb5d45)
+  Traces pricing-procedure determination, procedure steps, condition types, access sequences, condition tables, records, scales, and repricing. Use for: the primary Lesson 16 pricing model.
+- [SAP Help: Condition Technique and Pricing](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/7b24a64d9d0941bda1afa753263d9e39/d69fbe532789b44ce10000000a174cb4.html)
+  Defines condition records, procedures, condition types, access sequences, and calculation order. Use for: authoritative component responsibilities.
+- [SAP Help: Pricing Information and Analysis](https://help.sap.com/docs/SAP_S4HANA_ON-PREMISE/4dd8cb7b1c484b4b93af84d00f60fdb8/918dc95360267214e10000000a174cb4.html)
+  Explains the Sales Order Pricing Analysis view of procedure, condition types, accesses, and found records. Use for: technical diagnosis.
+- [SAP Help: How to Introduce a New Price Element](https://help.sap.com/docs/SAP_S4HANA_ONPREMISE/7b24a64d9d0941bda1afa753263d9e39/735946c4cf404059bd7f725850d5f187.html)
+  Gives the official construction sequence from price-relevant field and condition table through access sequence, condition type, and pricing procedure. Use for: understanding configuration dependencies.
+- [SAP Help: Sales Order Item Pricing Element](https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/abf59161a5734e0393d30c5fa2f41053.html)
+  Documents the released OData V4 item-pricing-element node and its procedure-step, condition-rate, currency, quantity, and base fields. Use for: clean-core/API-oriented inspection.
 - [SAP Learning: Applying the Partner Function Concept](https://learning.sap.com/courses/fundamental-customizing-in-sap-s-4hana-sales/applying-the-partner-function-concept)
   Distinguishes partner types and transaction-specific partner functions and shows how master relationships are proposed into documents. Use for: Sold-to, Ship-to, Bill-to, Payer, and partner determination.
 - [SAP Learning Journey: Implementing Sales in SAP S/4HANA Cloud Public Edition](https://learning.sap.com/learning-journeys/implementing-sap-s4hana-cloud-public-edition-sales)
